@@ -99,9 +99,13 @@ namespace CountlySDK.Helpers
                 var settings = await LoadFromFile<Dictionary<string, string>>(Storage.settings);
 
                 _settings.Clear();
-                foreach (var kp in settings)
+
+                if (settings != null)
                 {
-                    _settings[kp.Key] = kp.Value;
+                    foreach (var kp in settings)
+                    {
+                        _settings[kp.Key] = kp.Value;
+                    }
                 }
             }
         }
