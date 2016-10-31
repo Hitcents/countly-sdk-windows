@@ -240,7 +240,7 @@ namespace CountlySDK
         private static void UpdateSession(object sender, object e)
 #endif
         {
-            AddSessionEvent(new UpdateSession(AppKey, Device.DeviceId, (int)DateTime.Now.Subtract(startTime).TotalSeconds));
+            var task = AddSessionEvent(new UpdateSession(AppKey, Device.DeviceId, (int)DateTime.Now.Subtract(startTime).TotalSeconds));
         }
 
         /// <summary>
@@ -499,7 +499,7 @@ namespace CountlySDK
 
             TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
 
-            Task.Run(async () =>
+            var task = Task.Run(async () =>
             {
                 lock (sync)
                 {

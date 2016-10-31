@@ -105,7 +105,7 @@ namespace CountlySDK
 
                     tcs.SetResult(response);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     tcs.SetResult(default(T));
                 }
