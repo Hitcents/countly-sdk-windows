@@ -161,7 +161,9 @@ namespace CountlySDK
             ServerUrl = serverUrl;
             AppKey = appKey;
 
-#if !PCL
+#if PCL
+            await Storage.ReadSettings();
+#else
             if (application != null)
             {
                 IsExceptionsLoggingEnabled = true;
@@ -175,7 +177,7 @@ namespace CountlySDK
 
             Sessions = await Storage.LoadFromFile<List<SessionEvent>>(sessionsFilename) ?? new List<SessionEvent>();
 
-            Exceptions = JsonConvert.DeserializeObject<List<ExceptionEvent>>(Storage.GetValue<string>(exceptionsFilename, "")) ?? new List<ExceptionEvent>();
+            Exceptions = JsonConvert.DeserializeObject<List<ExceptionEvent>>(Storage.GetValue(exceptionsFilename, "")) ?? new List<ExceptionEvent>();
 
             UserDetails = await Storage.LoadFromFile<CountlyUserDetails>(userDetailsFilename) ?? new CountlyUserDetails();
 
@@ -222,7 +224,7 @@ namespace CountlySDK
 
             Sessions = await Storage.LoadFromFile<List<SessionEvent>>(sessionsFilename) ?? new List<SessionEvent>();
 
-            Exceptions = JsonConvert.DeserializeObject<List<ExceptionEvent>>(Storage.GetValue<string>(exceptionsFilename, "")) ?? new List<ExceptionEvent>();
+            Exceptions = JsonConvert.DeserializeObject<List<ExceptionEvent>>(Storage.GetValue(exceptionsFilename, "")) ?? new List<ExceptionEvent>();
 
             UserDetails = await Storage.LoadFromFile<CountlyUserDetails>(userDetailsFilename) ?? new CountlyUserDetails();
 

@@ -1,10 +1,9 @@
-﻿using PCLStorage;
+﻿using Nito.AsyncEx;
+using PCLStorage;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CountlySDK.Helpers
@@ -15,52 +14,96 @@ namespace CountlySDK.Helpers
         /// Countly folder
         /// </summary>
         private const string folder = "countly";
+        /// <summary>
+        /// Settings file inside Countly folder
+        /// </summary>
+        private const string settings = "settings";
+        private static readonly Dictionary<string, string> _settings = new Dictionary<string, string>();
+        private static AsyncLock _lock = new AsyncLock();
 
-        public static TValue GetValue<TValue>(string key, TValue defaultvalue)
+        public static string GetValue(string key, string defaultvalue)
         {
-            TValue value = defaultvalue;
+            string value;
 
-            // If the key exists, retrieve the value.
-            //if (Settings.Values.ContainsKey(key))
-            //{
-            //    value = (TValue)Settings.Values[key];
-            //}
-            //// Otherwise, use the default value.
-            //else
-            //{
-            //    value = defaultvalue;
-            //}
+            //If the key exists, retrieve the value.
+            string v;
+            using (_lock.Lock())
+            {
+                if (_settings.TryGetValue(key, out v))
+                {
+                    value = v;
+                }
+                else
+                {
+                    value = defaultvalue;
+                }
+            }
 
             return value;
         }
 
-        public static bool SetValue(string key, object value)
+        public static bool SetValue(string key, string value)
         {
             bool valueChanged = false;
 
-            //if (Settings.Values.ContainsKey(key))
-            //{
-            //    if (Settings.Values[key] != value)
-            //    {
-            //        Settings.Values[key] = value;
-            //        valueChanged = true;
-            //    }
-            //}
-            //else
-            //{
-            //    Settings.Values.Add(key, value);
-            //    valueChanged = true;
-            //}
+            string v;
+            using (_lock.Lock())
+            {
+                if (_settings.TryGetValue(key, out v))
+                {
+                    if (value != v)
+                    {
+                        _settings[key] = value;
+                        valueChanged = true;
+                    }
+                }
+                else
+                {
+                    _settings.Add(key, value);
+                    valueChanged = true;
+                }
+            }
+
+            if (valueChanged)
+                WriteSettings();
 
             return valueChanged;
         }
 
         public static void RemoveValue(string key)
         {
-            //if (Settings.Values.ContainsKey(key))
-            //{
-            //    Settings.Values.Remove(key);
-            //}
+            using (_lock.Lock())
+            {
+                if (_settings.Remove(key))
+                {
+                    WriteSettings();
+                }
+            }
+        }
+
+        private static async void WriteSettings()
+        {
+            using (await _lock.LockAsync())
+            {
+                await SaveToFile(settings, _settings);
+            }
+        }
+
+        /// <summary>
+        /// Needs to be called once on startup
+        /// </summary>
+        public static async Task ReadSettings()
+        {
+            using (await _lock.LockAsync())
+            {
+                var settings = await LoadFromFile<Dictionary<string, string>>(Storage.settings);
+
+                _settings.Clear();
+                foreach (var kp in settings)
+                {
+                    _settings[kp.Key] = kp.Value;
+                }
+            }
         }
 
         /// <summary>
@@ -68,7 +111,7 @@ namespace CountlySDK.Helpers
         /// </summary>
         /// <param name="filename">File to save to</param>
         /// <param name="objForSave">Object to save</param>
-        public static async Task SaveToFile<T>(string path, object objForSave)
+        public static async Task SaveToFile<T>(string path, T objForSave)
         {
             try
             {
