@@ -19,3 +19,5 @@ Bin
 /wp7/packages
 /windows80/packages
 /net35/packages
+/pcl/Countly/packages
+*.suo
