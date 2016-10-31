@@ -52,9 +52,6 @@
     <Compile Include="..\..\..\windows\Countly\Entities\CustomInfoItem.cs">
       <Link>Entities\CustomInfoItem.cs</Link>
     </Compile>
-    <Compile Include="..\..\..\windows\Countly\Entities\Device.cs">
-      <Link>Entities\Device.cs</Link>
-    </Compile>
     <Compile Include="..\..\..\windows\Countly\Entities\EndSession.cs">
       <Link>Entities\EndSession.cs</Link>
     </Compile>
@@ -91,6 +88,7 @@
     <Compile Include="..\..\..\windows\Countly\Server\Responses\ResultResponse.cs">
       <Link>Server\Responses\ResultResponse.cs</Link>
     </Compile>
+    <Compile Include="Entities\Device.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
