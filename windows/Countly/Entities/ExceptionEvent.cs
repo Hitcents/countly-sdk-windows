@@ -62,6 +62,10 @@ namespace CountlySDK.Entities
         [JsonProperty("_app_version")]
         public string AppVersion { get; set; }
 
+        [JsonProperty("_locale")]
+        [DataMemberAttribute]
+        public string Locale { get; set; }
+
         //state of device
 
         [DataMemberAttribute]
@@ -153,6 +157,7 @@ namespace CountlySDK.Entities
             Device = CountlySDK.Entities.Device.DeviceName;
             Resolution = CountlySDK.Entities.Device.Resolution;
             AppVersion = CountlySDK.Entities.Device.AppVersion;
+            Locale = CountlySDK.Entities.Device.Locale;
 
             //state of device
             Orientation = CountlySDK.Entities.Device.Orientation;

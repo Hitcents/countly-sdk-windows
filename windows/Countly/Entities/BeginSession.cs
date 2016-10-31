@@ -37,8 +37,9 @@ namespace CountlySDK.Entities
         /// <param name="deviceId">Unique ID for the device the app is running on</param>
         /// <param name="sdkVersion">SDK version string</param>
         /// <param name="metrics">Metrics parameters</param>
-        public BeginSession(string appKey, string deviceId, string sdkVersion, Metrics metrics)
+        public BeginSession(string appKey, string deviceId, string sdkVersion)
         {
+            var metrics = new Metrics();
             Content = String.Format("/i?app_key={0}&device_id={1}&sdk_version={2}&begin_session=1&metrics={3}&timestamp={4}", appKey, deviceId, sdkVersion, WebUtility.UrlEncode(metrics.ToString()), TimeHelper.ToUnixTime(DateTime.Now.ToUniversalTime()));
         }
     }

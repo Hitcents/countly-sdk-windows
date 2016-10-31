@@ -76,6 +76,15 @@ namespace CountlySDK.Entities
         }
 
         /// <summary>
+        /// The device's locale
+        /// </summary>
+        public static string Locale
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Returns cellular mobile operator
         /// </summary>
         public static string Carrier

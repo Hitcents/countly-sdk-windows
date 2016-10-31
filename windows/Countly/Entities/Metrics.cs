@@ -60,6 +60,10 @@ namespace CountlySDK.Entities
         [DataMemberAttribute]
         public string Resolution { get; set; }
 
+        [JsonProperty("_locale")]
+        [DataMemberAttribute]
+        public string Locale { get; set; }
+
         /// <summary>
         /// Cellular mobile operator
         /// </summary>
@@ -77,20 +81,15 @@ namespace CountlySDK.Entities
         /// <summary>
         /// Creates Metrics object with provided values
         /// </summary>
-        /// <param name="OS">Name of the current operating system</param>
-        /// <param name="OSVersion">Current operating system version</param>
-        /// <param name="Device">Current device model</param>
-        /// <param name="Resolution">Device resolution</param>
-        /// <param name="Carrier">Cellular mobile operator</param>
-        /// <param name="AppVersion">Application version</param>
-        public Metrics(string OS, string OSVersion, string Device, string Resolution, string Carrier, string AppVersion)
+        public Metrics()
         {
-            this.OS = OS;
-            this.OSVersion = OSVersion;
-            this.Device = Device;
-            this.Resolution = Resolution;
-            this.Carrier = Carrier;
-            this.AppVersion = AppVersion;
+            this.OS = Entities.Device.OS;
+            this.OSVersion = Entities.Device.OSVersion;
+            this.Device = Entities.Device.DeviceName;
+            this.Resolution = Entities.Device.Resolution;
+            this.Carrier = Entities.Device.Carrier;
+            this.AppVersion = Entities.Device.AppVersion;
+            this.Locale = Entities.Device.Locale;
         }
 
         /// <summary>
