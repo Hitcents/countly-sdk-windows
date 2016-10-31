@@ -30,7 +30,6 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using Windows.UI.Core;
 
 namespace CountlySDK.Entities
 {

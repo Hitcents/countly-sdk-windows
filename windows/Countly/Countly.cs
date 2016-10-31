@@ -29,9 +29,11 @@ using CountlySDK.Entities;
 using CountlySDK.Entitites;
 using CountlySDK.Helpers;
 using CountlySDK.Server.Responses;
-using Windows.UI.Xaml;
 using System.IO;
 using Newtonsoft.Json;
+#if !PCL
+using Windows.UI.Xaml;
+#endif
 
 namespace CountlySDK
 {
@@ -83,7 +85,11 @@ namespace CountlySDK
         // Start session timestamp
         private static DateTime startTime;
         // Update session timer
+#if PCL
+        private static Timer Timer;
+#else
         private static DispatcherTimer Timer;
+#endif
 
         /// <summary>
         /// Determines if Countly debug messages are displayed to Output window
@@ -136,7 +142,12 @@ namespace CountlySDK
         /// </summary>
         /// <param name="serverUrl">URL of the Countly server to submit data to; use "https://cloud.count.ly" for Countly Cloud</param>
         /// <param name="appKey">app key for the application being tracked; find in the Countly Dashboard under Management > Applications</param>
-        public static async Task StartSession(string serverUrl, string appKey, Application application = null)
+        public static async Task StartSession(string serverUrl, string appKey
+#if PCL
+            )
+#else
+            , Application application = null)
+#endif
         {
             if (String.IsNullOrWhiteSpace(serverUrl))
             {
@@ -151,6 +162,7 @@ namespace CountlySDK
             ServerUrl = serverUrl;
             AppKey = appKey;
 
+#if !PCL
             if (application != null)
             {
                 IsExceptionsLoggingEnabled = true;
@@ -158,6 +170,7 @@ namespace CountlySDK
                 application.UnhandledException -= OnApplicationUnhandledException;
                 application.UnhandledException += OnApplicationUnhandledException;
             }
+#endif
 
             Events = await Storage.LoadFromFile<List<CountlyEvent>>(eventsFilename) ?? new List<CountlyEvent>();
 
@@ -168,13 +181,18 @@ namespace CountlySDK
             UserDetails = await Storage.LoadFromFile<CountlyUserDetails>(userDetailsFilename) ?? new CountlyUserDetails();
 
             UserDetails.UserDetailsChanged += OnUserDetailsChanged;
-
+             
             startTime = DateTime.Now;
 
+#if PCL
+            var interval = TimeSpan.FromSeconds(updateInterval);
+            Timer = new Timer(UpdateSession, null, interval, interval);
+#else
             Timer = new DispatcherTimer();
             Timer.Interval = TimeSpan.FromSeconds(updateInterval);
             Timer.Tick += UpdateSession;
             Timer.Start();
+#endif
 
             var task = AddSessionEvent(new BeginSession(AppKey, Device.DeviceId, sdkVersion, new Metrics(Device.OS, Device.OSVersion, Device.DeviceName, Device.Resolution, Device.Carrier, Device.AppVersion)));
         }
@@ -215,9 +233,11 @@ namespace CountlySDK
         /// <summary>
         /// Sends session duration. Called automatically each <updateInterval> seconds
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+#if PCL
+        private static void UpdateSession(object state)
+#else
         private static void UpdateSession(object sender, object e)
+#endif
         {
             AddSessionEvent(new UpdateSession(AppKey, Device.DeviceId, (int)DateTime.Now.Subtract(startTime).TotalSeconds));
         }
@@ -230,8 +250,12 @@ namespace CountlySDK
         {
             if (Timer != null)
             {
+#if PCL
+                Timer.Dispose();
+#else
                 Timer.Stop();
                 Timer.Tick -= UpdateSession;
+#endif
                 Timer = null;
             }
 
@@ -341,6 +365,7 @@ namespace CountlySDK
         /// </summary>
         /// <param name="sender">sender param</param>
         /// <param name="e">exception details</param>
+#if !PCL
         private static async void OnApplicationUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             if (IsExceptionsLoggingEnabled)
@@ -348,6 +373,7 @@ namespace CountlySDK
                 await RecordUnhandledException(e.Exception.Message, e.Exception.StackTrace);
             }
         }
+#endif
 
         /// <summary>
         /// Immediately disables session, event, exceptions & user details tracking and clears any stored sessions, events, exceptions & user details data.
@@ -365,8 +391,12 @@ namespace CountlySDK
 
                 if (Timer != null)
                 {
+#if PCL
+                    Timer.Dispose();
+#else
                     Timer.Stop();
                     Timer.Tick -= UpdateSession;
+#endif
                     Timer = null;
                 }
 
