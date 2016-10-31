@@ -284,16 +284,20 @@ namespace CountlySDK.Entities
             {
                 isNotified = false;
 
+#if !PCL
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                 () =>
                 {
+#endif
                     if (!isNotified)
                     {
                         isNotified = true;
 
                         UserDetailsChanged();
                     }
+#if !PCL
                 });
+#endif
             }
         }
 
