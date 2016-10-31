@@ -176,7 +176,7 @@ namespace CountlySDK
             Timer.Tick += UpdateSession;
             Timer.Start();
 
-            AddSessionEvent(new BeginSession(AppKey, Device.DeviceId, sdkVersion, new Metrics(Device.OS, Device.OSVersion, Device.DeviceName, Device.Resolution, Device.Carrier, Device.AppVersion)));
+            var task = AddSessionEvent(new BeginSession(AppKey, Device.DeviceId, sdkVersion, new Metrics(Device.OS, Device.OSVersion, Device.DeviceName, Device.Resolution, Device.Carrier, Device.AppVersion)));
         }
 
         /// <summary>
