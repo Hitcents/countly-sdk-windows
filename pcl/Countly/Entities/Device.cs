@@ -10,7 +10,7 @@ namespace CountlySDK.Entities
     /// This class provides several static methods to retrieve information about the current device and operating environment.
     /// NOTE: PCL implementation requires callbacks or direct setting of properties
     /// </summary>
-    internal static class Device
+    public static class Device
     {
         /// <summary>
         /// Returns the unique device identificator
