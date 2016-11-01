@@ -72,6 +72,20 @@ namespace CountlySDK.Entities
         public string Carrier { get; set; }
 
         /// <summary>
+        /// The package name of the app that installed this app
+        /// </summary>
+        [JsonProperty("_store")]
+        [DataMemberAttribute]
+        public string Store { get; set; }
+
+        /// <summary>
+        /// A string constant representing the current display density, or the empty string if the density is unknown
+        /// </summary>
+        [JsonProperty("_density")]
+        [DataMemberAttribute]
+        public string Density { get; set; }
+
+        /// <summary>
         /// Application version
         /// </summary>
         [JsonProperty("_app_version")]
@@ -90,6 +104,8 @@ namespace CountlySDK.Entities
             this.Carrier = Entities.Device.Carrier;
             this.AppVersion = Entities.Device.AppVersion;
             this.Locale = Entities.Device.Locale;
+            this.Store = Entities.Device.Store;
+            this.Density = Entities.Device.Density;
         }
 
         /// <summary>

@@ -94,6 +94,24 @@ namespace CountlySDK.Entities
         }
 
         /// <summary>
+        /// A string constant representing the current display density, or the empty string if the density is unknown
+        /// </summary>
+        public static string Density
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// On Android, this is the package name of the app that installed this app
+        /// </summary>
+        public static string Store
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Set this callback to provide orientation logic
         /// </summary>
         public static Func<string> OrientationCallback
