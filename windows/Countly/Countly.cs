@@ -111,7 +111,7 @@ namespace CountlySDK
         /// </summary>
         private static async Task SaveEvents()
         {
-            await Storage.SaveToFile<List<CountlyEvent>>(eventsFilename, Events);
+            await Storage.SaveToFile(eventsFilename, Events);
         }
 
         /// <summary>
@@ -119,17 +119,15 @@ namespace CountlySDK
         /// </summary>
         private static async Task SaveSessions()
         {
-            await Storage.SaveToFile<List<SessionEvent>>(sessionsFilename, Sessions);
+            await Storage.SaveToFile(sessionsFilename, Sessions);
         }
 
         /// <summary>
         /// Saves exceptions to the storage
         /// </summary>
-        private static void SaveExceptions()
+        private static async Task SaveExceptions()
         {
-            string json = JsonConvert.SerializeObject(Exceptions, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore});
-
-            Storage.SetValue(exceptionsFilename, json);
+            await Storage.SaveToFile(exceptionsFilename, Exceptions);
         }
 
         /// <summary>
@@ -137,7 +135,7 @@ namespace CountlySDK
         /// </summary>
         private static async Task SaveUserDetails()
         {
-            await Storage.SaveToFile<CountlyUserDetails>(userDetailsFilename, UserDetails);
+            await Storage.SaveToFile(userDetailsFilename, UserDetails);
         }
 
         /// <summary>
@@ -147,12 +145,7 @@ namespace CountlySDK
         /// </summary>
         /// <param name="serverUrl">URL of the Countly server to submit data to; use "https://cloud.count.ly" for Countly Cloud</param>
         /// <param name="appKey">app key for the application being tracked; find in the Countly Dashboard under Management > Applications</param>
-        public static async Task StartSession(string serverUrl, string appKey
-#if PCL
-            )
-#else
-            , Application application = null)
-#endif
+        public static async Task StartSession(string serverUrl, string appKey)
         {
             if (String.IsNullOrWhiteSpace(serverUrl))
             {
@@ -167,23 +160,11 @@ namespace CountlySDK
             ServerUrl = serverUrl;
             AppKey = appKey;
 
-#if PCL
-            await Storage.ReadSettings();
-#else
-            if (application != null)
-            {
-                IsExceptionsLoggingEnabled = true;
-
-                application.UnhandledException -= OnApplicationUnhandledException;
-                application.UnhandledException += OnApplicationUnhandledException;
-            }
-#endif
-
             Events = await Storage.LoadFromFile<List<CountlyEvent>>(eventsFilename) ?? new List<CountlyEvent>();
 
             Sessions = await Storage.LoadFromFile<List<SessionEvent>>(sessionsFilename) ?? new List<SessionEvent>();
 
-            Exceptions = JsonConvert.DeserializeObject<List<ExceptionEvent>>(Storage.GetValue(exceptionsFilename, "")) ?? new List<ExceptionEvent>();
+            Exceptions = await Storage.LoadFromFile<List<ExceptionEvent>>(exceptionsFilename) ?? new List<ExceptionEvent>();
 
             UserDetails = await Storage.LoadFromFile<CountlyUserDetails>(userDetailsFilename) ?? new CountlyUserDetails();
 
@@ -230,7 +211,7 @@ namespace CountlySDK
 
             Sessions = await Storage.LoadFromFile<List<SessionEvent>>(sessionsFilename) ?? new List<SessionEvent>();
 
-            Exceptions = JsonConvert.DeserializeObject<List<ExceptionEvent>>(Storage.GetValue(exceptionsFilename, "")) ?? new List<ExceptionEvent>();
+            Exceptions = await Storage.LoadFromFile<List<ExceptionEvent>>(exceptionsFilename) ?? new List<ExceptionEvent>();
 
             UserDetails = await Storage.LoadFromFile<CountlyUserDetails>(userDetailsFilename) ?? new CountlyUserDetails();
 
@@ -689,7 +670,7 @@ namespace CountlySDK
                 Exceptions.Add(new ExceptionEvent(error, stackTrace, unhandled, breadcrumb, run, customInfo));
             }
 
-            SaveExceptions();
+            await SaveExceptions();
 
             if (!unhandled)
             {
@@ -743,7 +724,7 @@ namespace CountlySDK
                         exceptionsCountToUploadAgain = Exceptions.Count;
                     }
 
-                    SaveExceptions();
+                    await SaveExceptions();
 
                     if (exceptionsCountToUploadAgain > 0)
                     {
