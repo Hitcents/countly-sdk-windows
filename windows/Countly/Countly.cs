@@ -195,7 +195,7 @@ namespace CountlySDK
             Timer.Start();
 #endif
 
-            var task = AddSessionEvent(new BeginSession(AppKey, Device.DeviceId, sdkVersion));
+            await AddSessionEvent(new BeginSession(AppKey, Device.DeviceId, sdkVersion));
         }
 
         /// <summary>
@@ -235,12 +235,12 @@ namespace CountlySDK
         /// Sends session duration. Called automatically each <updateInterval> seconds
         /// </summary>
 #if PCL
-        private static void UpdateSession(object state)
+        private static async void UpdateSession(object state)
 #else
-        private static void UpdateSession(object sender, object e)
+        private static async void UpdateSession(object sender, object e)
 #endif
         {
-            var task = AddSessionEvent(new UpdateSession(AppKey, Device.DeviceId, (int)DateTime.Now.Subtract(startTime).TotalSeconds));
+            await AddSessionEvent(new UpdateSession(AppKey, Device.DeviceId, (int)DateTime.Now.Subtract(startTime).TotalSeconds));
         }
 
         /// <summary>
@@ -275,20 +275,17 @@ namespace CountlySDK
                 throw new InvalidOperationException("session is not active");
             }
 
-            await Task.Run(async () =>
+            lock (sync)
             {
-                lock (sync)
-                {
-                    Sessions.Add(sessionEvent);
-                }
+                Sessions.Add(sessionEvent);
+            }
 
-                await SaveSessions();
+            await SaveSessions();
 
-                if (uploadImmediately)
-                {
-                    await Upload();
-                }
-            });
+            if (uploadImmediately)
+            {
+                await Upload();
+            }
         }
 
         /// <summary>
@@ -496,24 +493,14 @@ namespace CountlySDK
             {
                 throw new InvalidOperationException("session is not active");
             }
-
-            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
-
-            var task = Task.Run(async () =>
+            lock (sync)
             {
-                lock (sync)
-                {
-                    Events.Add(countlyEvent);
-                }
+                Events.Add(countlyEvent);
+            }
 
-                await SaveEvents();                
+            await SaveEvents();
 
-                bool success = await Upload();
-
-                tcs.SetResult(success);
-            });
-
-            return await tcs.Task;
+            return await Upload();
         }
 
         /// <summary>
