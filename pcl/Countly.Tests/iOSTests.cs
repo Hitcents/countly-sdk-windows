@@ -1,16 +1,17 @@
-﻿using CountlySDK.Entities;
+﻿using CountlySDK;
+using CountlySDK.Entities;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace Countly.Tests
+namespace CountlyTests
 {
     [TestFixture]
     public class iOSTests
     {
+        private const string Server = "https://try.count.ly";
+        private const string ApiKey = "<your-key-here>";
+
         [Test]
         public async Task BeginSession()
         {
@@ -26,7 +27,16 @@ namespace Countly.Tests
             Device.OnlineCallback = () => false;
             Device.OrientationCallback = () => "Unknown";
 
-            await CountlySDK.Countly.StartSession("https://try.count.ly", "*****");
+            Countly.IsLoggingEnabled = true;
+
+            await Countly.StartSession(Server, ApiKey);
+            Countly.UserDetails.Name = "unit-test";
+
+            var segmentation = new Segmentation();
+            segmentation.Add("test", new Random().Next(10).ToString());
+            await Countly.RecordEvent("unit-test", 1, 0, segmentation);
+
+            await Countly.EndSession();
         }
     }
 }

@@ -40,7 +40,12 @@ namespace CountlySDK.Entities
         public BeginSession(string appKey, string deviceId, string sdkVersion)
         {
             var metrics = new Metrics();
-            Content = String.Format("/i?app_key={0}&device_id={1}&sdk_version={2}&begin_session=1&metrics={3}&timestamp={4}", appKey, deviceId, sdkVersion, WebUtility.UrlEncode(metrics.ToString()), TimeHelper.ToUnixTime(DateTime.Now.ToUniversalTime()));
+            Content["app_key"] = appKey;
+            Content["device_id"] = deviceId;
+            Content["sdk_version"] = sdkVersion;
+            Content["begin_session"] = "1";
+            Content["metrics"] = metrics.ToString();
+            Content["timestamp"] = TimeHelper.ToUnixTime(DateTime.Now.ToUniversalTime()).ToString();
         }
     }
 }

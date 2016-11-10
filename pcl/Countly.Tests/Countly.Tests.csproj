@@ -7,8 +7,8 @@
     <ProjectGuid>{DF3D5EB6-7AEC-4E5D-A6C3-5F51F57EC681}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Countly.Tests</RootNamespace>
-    <AssemblyName>Countly.Tests</AssemblyName>
+    <RootNamespace>CountlyTests</RootNamespace>
+    <AssemblyName>CountlyTests</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />

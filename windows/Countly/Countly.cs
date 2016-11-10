@@ -625,23 +625,6 @@ namespace CountlySDK
         }
 
         /// <summary>
-        /// Uploads user picture. Accepted picture formats are .png, .gif and .jpeg and picture will be resized to maximal 150x150 dimensions
-        /// </summary>
-        /// <param name="stream">Image stream</param>
-        /// <returns>true if image is successfully uploaded, false otherwise</returns>
-        internal static async Task<bool> UploadUserPicture(Stream imageStream)
-        {
-            if (String.IsNullOrWhiteSpace(Countly.ServerUrl))
-            {
-                throw new InvalidOperationException("session is not active");
-            }
-
-            ResultResponse resultResponse = await Api.UploadUserPicture(Countly.ServerUrl, Countly.AppKey, Device.DeviceId, imageStream, (UserDetails.isChanged) ? UserDetails : null);
-
-            return (resultResponse != null && resultResponse.IsSuccess);
-        }
-
-        /// <summary>
         /// Records exception
         /// </summary>
         /// <param name="error">exception title</param>

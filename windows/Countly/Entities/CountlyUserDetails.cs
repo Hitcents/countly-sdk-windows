@@ -278,7 +278,11 @@ namespace CountlySDK.Entities
             }
         }
 
-        private async void NotifyDetailsChanged()
+        private
+            #if !PCL
+            async 
+            #endif
+            void NotifyDetailsChanged()
         {
             if (UserDetailsChanged != null)
             {
@@ -311,16 +315,6 @@ namespace CountlySDK.Entities
         public CountlyUserDetails()
         {
             Custom = new CustomInfo();
-        }
-
-        /// <summary>
-        /// Uploads user picture. Accepted picture formats are .png, .gif and .jpeg and picture will be resized to maximal 150x150 dimensions
-        /// </summary>
-        /// <param name="stream">Image stream</param>
-        /// <returns>true if image is successfully uploaded, false otherwise</returns>
-        public async Task<bool> UploadUserPicture(Stream imageStream)
-        {
-            return await Countly.UploadUserPicture(imageStream);
         }
 
         /// <summary>

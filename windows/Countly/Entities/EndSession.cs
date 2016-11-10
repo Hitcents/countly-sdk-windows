@@ -36,7 +36,10 @@ namespace CountlySDK.Entities
         /// <param name="deviceId">Unique ID for the device the app is running on</param>
         public EndSession(string appKey, string deviceId)
         {
-            Content = String.Format("/i?app_key={0}&device_id={1}&end_session=1&timestamp={2}", appKey, deviceId, TimeHelper.ToUnixTime(DateTime.Now.ToUniversalTime()));
+            Content["app_key"] = appKey;
+            Content["device_id"] = deviceId;
+            Content["end_session"] = "1";
+            Content["timestamp"] = TimeHelper.ToUnixTime(DateTime.Now.ToUniversalTime()).ToString();
         }
     }
 }

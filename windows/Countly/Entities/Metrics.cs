@@ -114,7 +114,7 @@ namespace CountlySDK.Entities
         /// <returns></returns>
         public override string ToString()
         {
-            return JsonConvert.SerializeObject(this);
+            return JsonConvert.SerializeObject(this, Api.JsonSettings);
         }
     }
 }

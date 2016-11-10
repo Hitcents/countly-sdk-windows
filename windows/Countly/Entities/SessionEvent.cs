@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace CountlySDK.Entities
 {
@@ -9,6 +10,6 @@ namespace CountlySDK.Entities
     internal abstract class SessionEvent
     {
         [DataMemberAttribute]
-        public string Content { get; set; }
+        public Dictionary<string, string> Content { get; set; } = new Dictionary<string, string>();
     }
 }
