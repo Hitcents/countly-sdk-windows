@@ -91,17 +91,20 @@ namespace CountlySDK
             try
             {
                 string responseJson = await RequestAsync(address, data);
-                
-                Countly.Log(responseJson);
 
-                return JsonConvert.DeserializeObject<T>(responseJson);
+                if (!string.IsNullOrEmpty(responseJson))
+                {
+                    Countly.Log(responseJson);
+
+                    return JsonConvert.DeserializeObject<T>(responseJson);
+                }
             }
             catch (Exception exc)
             {
                 Countly.Log(exc);
-
-                return default(T);
             }
+
+            return default(T);
         }
 
         private static async Task<string> RequestAsync(string address, Stream data = null)
