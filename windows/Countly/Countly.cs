@@ -60,13 +60,13 @@ namespace CountlySDK
         private static bool uploadInProgress;
 
         // File that stores events objects
-        private const string eventsFilename = "events.xml";
+        private const string eventsFilename = "events.json";
         // File that stores sessions objects
-        private const string sessionsFilename = "sessions.xml";
+        private const string sessionsFilename = "sessions.json";
         // File that stores exceptions objects
-        private const string exceptionsFilename = "exceptions.xml";
+        private const string exceptionsFilename = "exceptions.json";
         // File that stores user details object
-        private const string userDetailsFilename = "userdetails.xml";
+        private const string userDetailsFilename = "userdetails.json";
 
         private const string DebugLabel = "Count.ly: ";
 

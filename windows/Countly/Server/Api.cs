@@ -81,7 +81,7 @@ namespace CountlySDK
 
                 if (Countly.IsLoggingEnabled)
                 {
-                    Countly.Log("POST {0}: ", address);
+                    Countly.Log("POST {0}", address);
 
                     foreach (var pair in post)
                     {

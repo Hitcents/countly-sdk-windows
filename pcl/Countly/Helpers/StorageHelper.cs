@@ -1,9 +1,9 @@
-﻿using Nito.AsyncEx;
+﻿using Newtonsoft.Json;
+using Nito.AsyncEx;
 using PCLStorage;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace CountlySDK.Helpers
@@ -105,20 +105,22 @@ namespace CountlySDK.Helpers
         /// Saves object into file
         /// </summary>
         /// <param name="filename">File to save to</param>
-        /// <param name="objForSave">Object to save</param>
-        public static async Task SaveToFile<T>(string path, T objForSave)
+        /// <param name="obj">Object to save</param>
+        public static async Task SaveToFile<T>(string path, T obj)
         {
             try
             {
                 using (await _fileLock.LockAsync())
                 {
-                    var sessionSerializer = new DataContractSerializer(typeof(T));
-                    var storageFolder = await GetFolder(Folder);
-                    var storageFile = await storageFolder.CreateFileAsync(path, CreationCollisionOption.OpenIfExists);
+                    var folder = await GetFolder(Folder);
+                    var file = await folder.CreateFileAsync(path, CreationCollisionOption.OpenIfExists);
 
-                    using (var fileStream = await storageFile.OpenAsync(FileAccess.ReadAndWrite))
+                    using (var stream = await file.OpenAsync(FileAccess.ReadAndWrite))
+                    using (var writer = new StreamWriter(stream))
+                    using (var json = new JsonTextWriter(writer))
                     {
-                        sessionSerializer.WriteObject(fileStream, objForSave);
+                        var serializer = JsonSerializer.Create(Api.JsonSettings);
+                        serializer.Serialize(json, obj);
                     }
                 }
             }
@@ -140,15 +142,15 @@ namespace CountlySDK.Helpers
             {
                 using (await _fileLock.LockAsync())
                 {
-                    var storageFolder = await GetFolder(Folder);
-                    var storageFile = await storageFolder.GetFileAsync(path);
-                    if (storageFile == null)
-                        return default(T);
+                    var folder = await GetFolder(Folder);
+                    var file = await folder.GetFileAsync(path);
 
-                    using (var fileStream = await storageFile.OpenAsync(FileAccess.Read))
+                    using (var fileStream = await file.OpenAsync(FileAccess.Read))
+                    using (var reader = new StreamReader(fileStream))
+                    using (var json = new JsonTextReader(reader))
                     {
-                        var sessionSerializer = new DataContractSerializer(typeof(T));
-                        return (T)sessionSerializer.ReadObject(fileStream);
+                        var serializer = JsonSerializer.Create(Api.JsonSettings);
+                        return (T)serializer.Deserialize(json, typeof(T));
                     }
                 }
             }
@@ -167,14 +169,19 @@ namespace CountlySDK.Helpers
         /// <param name="path">Filename to delete</param>
         public static async Task DeleteFile(string path)
         {
-            using (await _fileLock.LockAsync())
+            try
             {
-                var storageFolder = await GetFolder(Folder);
-                var sessionFile = await storageFolder.CreateFileAsync(path, CreationCollisionOption.OpenIfExists);
-                if (sessionFile != null)
+                using (await _fileLock.LockAsync())
                 {
-                    await sessionFile.DeleteAsync();
+                    var folder = await GetFolder(Folder);
+                    var file = await folder.GetFileAsync(path);
+                    await file.DeleteAsync();
                 }
+            }
+            catch (FileNotFoundException) { }
+            catch (Exception exc)
+            {
+                Countly.Log(exc);
             }
         }
 
