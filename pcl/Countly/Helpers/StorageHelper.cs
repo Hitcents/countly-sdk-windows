@@ -113,7 +113,8 @@ namespace CountlySDK.Helpers
                 using (await _fileLock.LockAsync())
                 {
                     var sessionSerializer = new DataContractSerializer(typeof(T));
-                    var storageFile = await GetFile(path);
+                    var storageFolder = await GetFolder(Folder);
+                    var storageFile = await storageFolder.CreateFileAsync(path, CreationCollisionOption.OpenIfExists);
 
                     using (var fileStream = await storageFile.OpenAsync(FileAccess.ReadAndWrite))
                     {
@@ -139,45 +140,25 @@ namespace CountlySDK.Helpers
             {
                 using (await _fileLock.LockAsync())
                 {
-                    var storageFile = await GetFile(path);
+                    var storageFolder = await GetFolder(Folder);
+                    var storageFile = await storageFolder.GetFileAsync(path);
                     if (storageFile == null)
                         return default(T);
 
                     using (var fileStream = await storageFile.OpenAsync(FileAccess.Read))
-                    using (var reader = new StreamReader(fileStream))
                     {
                         var sessionSerializer = new DataContractSerializer(typeof(T));
-                        return (T)sessionSerializer.ReadObject(reader.BaseStream);
+                        return (T)sessionSerializer.ReadObject(fileStream);
                     }
                 }
             }
+            catch (FileNotFoundException) { }
             catch (Exception exc)
             {
                 Countly.Log(exc);
             }
 
             return default(T);
-        }
-
-        /// <summary>
-        /// Checks whether there is a file in storage
-        /// </summary>
-        /// <param name="path">filename</param>
-        /// <returns>true if file exists, false otherwise</returns>
-        private static async Task<bool> FileExists(IFolder storageFolder, string path)
-        {
-            return await storageFolder.CheckExistsAsync(path) == ExistenceCheckResult.FileExists;
-        }
-
-        /// <summary>
-        /// Get StorageFile object from specified path
-        /// </summary>
-        /// <param name="path">file path</param>
-        /// <returns>StorageFile object</returns>
-        private static async Task<IFile> GetFile(string path)
-        {
-            var storageFolder = await GetFolder(Folder);
-            return await storageFolder.CreateFileAsync(path, CreationCollisionOption.OpenIfExists);
         }
 
         /// <summary>
