@@ -13,13 +13,14 @@ namespace CountlySDK.Helpers
         /// <summary>
         /// Countly folder
         /// </summary>
-        private const string folder = "countly";
+        private const string Folder = "countly";
         /// <summary>
         /// Settings file inside Countly folder
         /// </summary>
-        private const string settings = "settings";
-        private static readonly Dictionary<string, string> _settings = new Dictionary<string, string>();
-        private static AsyncLock _lock = new AsyncLock();
+        private const string SettingsFile = "settings";
+        private static Dictionary<string, string> _settings = new Dictionary<string, string>();
+        private static readonly AsyncLock _settingsLock = new AsyncLock();
+        private static readonly AsyncLock _fileLock = new AsyncLock();
 
         public static string GetValue(string key, string defaultvalue)
         {
@@ -27,7 +28,7 @@ namespace CountlySDK.Helpers
 
             //If the key exists, retrieve the value.
             string v;
-            using (_lock.Lock())
+            using (_settingsLock.Lock())
             {
                 if (_settings.TryGetValue(key, out v))
                 {
@@ -47,7 +48,7 @@ namespace CountlySDK.Helpers
             bool valueChanged = false;
 
             string v;
-            using (_lock.Lock())
+            using (_settingsLock.Lock())
             {
                 if (_settings.TryGetValue(key, out v))
                 {
@@ -72,7 +73,7 @@ namespace CountlySDK.Helpers
 
         public static void RemoveValue(string key)
         {
-            using (_lock.Lock())
+            using (_settingsLock.Lock())
             {
                 if (_settings.Remove(key))
                 {
@@ -83,9 +84,9 @@ namespace CountlySDK.Helpers
 
         private static async void WriteSettings()
         {
-            using (await _lock.LockAsync())
+            using (await _settingsLock.LockAsync())
             {
-                await SaveToFile(settings, _settings);
+                await SaveToFile(SettingsFile, _settings);
             }
         }
 
@@ -94,19 +95,9 @@ namespace CountlySDK.Helpers
         /// </summary>
         public static async Task ReadSettings()
         {
-            using (await _lock.LockAsync())
+            using (await _settingsLock.LockAsync())
             {
-                var settings = await LoadFromFile<Dictionary<string, string>>(Storage.settings);
-
-                _settings.Clear();
-
-                if (settings != null)
-                {
-                    foreach (var kp in settings)
-                    {
-                        _settings[kp.Key] = kp.Value;
-                    }
-                }
+                _settings = await LoadFromFile<Dictionary<string, string>>(SettingsFile) ?? new Dictionary<string, string>();
             }
         }
 
@@ -119,39 +110,21 @@ namespace CountlySDK.Helpers
         {
             try
             {
-                var sessionSerializer = new DataContractSerializer(typeof(T));
-                MemoryStream sessionData = new MemoryStream();
-                sessionSerializer.WriteObject(sessionData, objForSave);
-                sessionData.Seek(0, SeekOrigin.Begin);
-
-                await SaveStream(sessionData, path);
-            }
-            catch
-            { }
-        }
-
-        /// <summary>
-        /// Saves stream into file
-        /// </summary>
-        /// <param name="stream">stream to save</param>
-        /// <param name="file">filename</param>
-        private static async Task SaveStream(Stream stream, string file)
-        {
-            try
-            {
-                var storageFolder = await GetFolder(folder);
-
-                var storageFile = await GetFile(file);
-
-                using (Stream fileStream = await storageFile.OpenAsync(FileAccess.ReadAndWrite))
+                using (await _fileLock.LockAsync())
                 {
-                    await stream.CopyToAsync(fileStream);
-                    await fileStream.FlushAsync();
-                    fileStream.Dispose();
+                    var sessionSerializer = new DataContractSerializer(typeof(T));
+                    var storageFile = await GetFile(path);
+
+                    using (var fileStream = await storageFile.OpenAsync(FileAccess.ReadAndWrite))
+                    {
+                        sessionSerializer.WriteObject(fileStream, objForSave);
+                    }
                 }
             }
-            catch
-            { }
+            catch (Exception exc)
+            {
+                Countly.Log(exc);
+            }
         }
 
         /// <summary>
@@ -162,77 +135,28 @@ namespace CountlySDK.Helpers
         /// <returns>Object from file</returns>
         public static async Task<T> LoadFromFile<T>(string path) where T : class
         {
-            T t = null;
-
             try
             {
-                Stream stream = await LoadStream(path);
-
-                if (stream != null)
+                using (await _fileLock.LockAsync())
                 {
-                    using (StreamReader reader = new StreamReader(stream))
+                    var storageFile = await GetFile(path);
+                    if (storageFile == null)
+                        return default(T);
+
+                    using (var fileStream = await storageFile.OpenAsync(FileAccess.Read))
+                    using (var reader = new StreamReader(fileStream))
                     {
                         var sessionSerializer = new DataContractSerializer(typeof(T));
-                        T obj = (T)sessionSerializer.ReadObject(reader.BaseStream);
-
-                        t = obj;
+                        return (T)sessionSerializer.ReadObject(reader.BaseStream);
                     }
                 }
             }
-            catch
-            { }
-
-            if (t != null)
+            catch (Exception exc)
             {
-                return t;
+                Countly.Log(exc);
             }
-            else if (!path.EndsWith(".backup"))
-            {
-                return await LoadFromFile<T>(path + ".backup");
-            }
-            else
-            {
-                return null;
-            }
-        }
 
-        /// <summary>
-        /// Loads stream from file
-        /// </summary>
-        /// <param name="path">filename</param>
-        /// <returns>stream</returns>
-        private static async Task<Stream> LoadStream(string path)
-        {
-            try
-            {
-                bool isFileExists = await FileExists(path);
-
-                if (!isFileExists) return null;
-
-                var storageFolder = await GetFolder(folder);
-
-                var storageFile = await storageFolder.CreateFileAsync(path, CreationCollisionOption.OpenIfExists);
-
-                if (storageFile == null)
-                {
-                    throw new Exception();
-                }
-                
-                using (StreamReader reader = new StreamReader(await storageFile.OpenAsync(FileAccess.Read)))
-                {
-                    MemoryStream memoryStream = new MemoryStream();
-
-                    reader.BaseStream.CopyTo(memoryStream);
-
-                    memoryStream.Position = 0;
-
-                    return memoryStream;
-                }
-            }
-            catch
-            {
-                return null;
-            }
+            return default(T);
         }
 
         /// <summary>
@@ -240,21 +164,9 @@ namespace CountlySDK.Helpers
         /// </summary>
         /// <param name="path">filename</param>
         /// <returns>true if file exists, false otherwise</returns>
-        private static async Task<bool> FileExists(string path)
+        private static async Task<bool> FileExists(IFolder storageFolder, string path)
         {
-            var storageFolder = await GetFolder(folder);
-
-            var files = await storageFolder.GetFilesAsync();
-
-            foreach (var file in files)
-            {
-                if (file.Name == path)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return await storageFolder.CheckExistsAsync(path) == ExistenceCheckResult.FileExists;
         }
 
         /// <summary>
@@ -264,11 +176,8 @@ namespace CountlySDK.Helpers
         /// <returns>StorageFile object</returns>
         private static async Task<IFile> GetFile(string path)
         {
-            var storageFolder = await GetFolder(folder);
-
-            var storageFile = await storageFolder.CreateFileAsync(path, CreationCollisionOption.OpenIfExists);
-
-            return storageFile;
+            var storageFolder = await GetFolder(Folder);
+            return await storageFolder.CreateFileAsync(path, CreationCollisionOption.OpenIfExists);
         }
 
         /// <summary>
@@ -277,13 +186,14 @@ namespace CountlySDK.Helpers
         /// <param name="path">Filename to delete</param>
         public static async Task DeleteFile(string path)
         {
-            var storageFolder = await GetFolder(folder);
-
-            var sessionFile = await storageFolder.CreateFileAsync(path, CreationCollisionOption.OpenIfExists);
-
-            if (sessionFile != null)
+            using (await _fileLock.LockAsync())
             {
-                await sessionFile.DeleteAsync();
+                var storageFolder = await GetFolder(Folder);
+                var sessionFile = await storageFolder.CreateFileAsync(path, CreationCollisionOption.OpenIfExists);
+                if (sessionFile != null)
+                {
+                    await sessionFile.DeleteAsync();
+                }
             }
         }
 
