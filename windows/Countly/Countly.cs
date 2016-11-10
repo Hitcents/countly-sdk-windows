@@ -30,6 +30,7 @@ using CountlySDK.Helpers;
 using CountlySDK.Server.Responses;
 using System.IO;
 using Newtonsoft.Json;
+using System.Diagnostics;
 #if !PCL
 using Windows.UI.Xaml;
 #endif
@@ -63,6 +64,8 @@ namespace CountlySDK
         private const string exceptionsFilename = "exceptions.xml";
         // File that stores user details object
         private const string userDetailsFilename = "userdetails.xml";
+
+        private const string DebugLabel = "Count.ly: ";
 
         // Used for thread-safe operations
         private static object sync = new object();
@@ -809,6 +812,24 @@ namespace CountlySDK
             }
 
             return success;
+        }
+
+        internal static void Log(string message)
+        {
+            if (IsLoggingEnabled)
+                Debug.WriteLine(DebugLabel + message);
+        }
+
+        internal static void Log(object value)
+        {
+            if (IsLoggingEnabled)
+                Debug.WriteLine(DebugLabel + value);
+        }
+
+        internal static void Log(string format, params object[] args)
+        {
+            if (IsLoggingEnabled)
+                Debug.WriteLine(DebugLabel + format, args);
         }
     }
 }

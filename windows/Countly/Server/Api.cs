@@ -3,7 +3,6 @@ using CountlySDK.Server.Responses;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -13,7 +12,6 @@ namespace CountlySDK
 {
     internal class Api
     {
-        private const string DebugLabel = "Count.ly: ";
         private static readonly HttpClient _httpClient = new HttpClient();
 
         public static async Task<ResultResponse> BeginSession(string serverUrl, string appKey, string deviceId, string sdkVersion, string metricsJson)
@@ -93,20 +91,14 @@ namespace CountlySDK
             try
             {
                 string responseJson = await RequestAsync(address, data);
-
-                if (Countly.IsLoggingEnabled)
-                {
-                    Debug.WriteLine(DebugLabel + responseJson);
-                }
+                
+                Countly.Log(responseJson);
 
                 return JsonConvert.DeserializeObject<T>(responseJson);
             }
             catch (Exception exc)
             {
-                if (Countly.IsLoggingEnabled)
-                {
-                    Debug.WriteLine(DebugLabel + exc);
-                }
+                Countly.Log(exc);
 
                 return default(T);
             }
@@ -114,10 +106,7 @@ namespace CountlySDK
 
         private static async Task<string> RequestAsync(string address, Stream data = null)
         {
-            if (Countly.IsLoggingEnabled)
-            {
-                Debug.WriteLine(DebugLabel + " POST " + address);
-            }
+            Countly.Log("POST {0}", address);
 
             var httpResponseMessage = await _httpClient.PostAsync(address, (data != null) ? new StreamContent(data) : null);
             if (httpResponseMessage.IsSuccessStatusCode)
