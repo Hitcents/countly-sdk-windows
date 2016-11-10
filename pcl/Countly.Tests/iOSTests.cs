@@ -12,8 +12,8 @@ namespace CountlyTests
         private const string Server = "https://try.count.ly";
         private const string ApiKey = "<your-key-here>";
 
-        [Test]
-        public async Task BeginSession()
+        [SetUp]
+        public void SetUp()
         {
             //Sample data from our iOS app
             Device.AppVersion = "0.1.0.1";
@@ -28,13 +28,28 @@ namespace CountlyTests
             Device.OrientationCallback = () => "Unknown";
 
             Countly.IsLoggingEnabled = true;
+        }
 
+        [Test]
+        public async Task RecordEvent()
+        {
             await Countly.StartSession(Server, ApiKey);
             Countly.UserDetails.Name = "unit-test";
 
             var segmentation = new Segmentation();
             segmentation.Add("test", new Random().Next(10).ToString());
             await Countly.RecordEvent("unit-test", 1, 0, segmentation);
+
+            await Countly.EndSession();
+        }
+
+        [Test]
+        public async Task SendException()
+        {
+            await Countly.StartSession(Server, ApiKey);
+            Countly.UserDetails.Name = "unit-test";
+
+            await Countly.RecordException("Oh no!", "this is a trace\nmorelines\n");
 
             await Countly.EndSession();
         }
