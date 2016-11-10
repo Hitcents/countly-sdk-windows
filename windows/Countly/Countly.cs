@@ -20,6 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+//This allows logging to work, whether you are DEBUG or not
+#define DEBUG
+
 using System;
 using System.Linq;
 using System.Collections.Generic;
