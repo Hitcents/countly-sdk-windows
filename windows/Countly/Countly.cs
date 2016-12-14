@@ -69,6 +69,7 @@ namespace CountlySDK
         private const string userDetailsFilename = "userdetails.json";
 
         private const string DebugLabel = "Count.ly: ";
+        private const string ViewEvent = "[CLY]_view";
 
         // Used for thread-safe operations
         private static object sync = new object();
@@ -95,6 +96,15 @@ namespace CountlySDK
 #else
         private static DispatcherTimer Timer;
 #endif
+
+        private static View lastView;
+
+        class View
+        {
+            public string Name { get; set; }
+
+            public DateTime Time { get; set; }
+        }
 
         /// <summary>
         /// Determines if Countly debug messages are displayed to Output window
@@ -481,6 +491,30 @@ namespace CountlySDK
         private static Task<bool> RecordCountlyEvent(string Key, int Count, double? Sum, double? Dur, Segmentation Segmentation)
         {
             return AddEvent(new CountlyEvent(Key, Count, Sum, Dur, Segmentation));
+        }
+
+        public static Task<bool> RecordView(string name, Segmentation segmentation)
+        {
+            if (segmentation == null)
+                segmentation = new Segmentation();
+            segmentation.Add("name", name);
+            segmentation.Add("visit", "1");
+            segmentation.Add("segment", Device.OS);
+
+            CountlyEvent evt;
+            var view = lastView;
+            if (view == null)
+            {
+                segmentation.Add("start", "1");
+
+                evt = new CountlyEvent(ViewEvent, 1, 0, null, segmentation);
+            }
+            else
+            {
+                evt = new CountlyEvent(ViewEvent, 1, 0, Math.Round((DateTime.UtcNow - view.Time).TotalSeconds, 2), segmentation);
+            }
+            lastView = new View { Name = name, Time = DateTime.UtcNow };
+            return AddEvent(evt);
         }
 
         /// <summary>
