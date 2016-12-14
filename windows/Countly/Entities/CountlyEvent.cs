@@ -59,6 +59,13 @@ namespace CountlySDK.Entities
         public double? Sum { get; set; }
 
         /// <summary>
+        /// Dur parameter, I have no idea guys
+        /// </summary>
+        [DataMemberAttribute]
+        [JsonProperty("dur", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public double? Dur { get; set; }
+
+        /// <summary>
         /// Segmentation parameter
         /// </summary>
         [DataMemberAttribute]
@@ -88,8 +95,9 @@ namespace CountlySDK.Entities
         /// <param name="Key">Key attribute, must be non-empty</param>
         /// <param name="Count">Count parameter, must me positive number</param>
         /// <param name="Sum">Sum parameter, can be null</param>
+        /// <param name="Dur">Dur parameter, I have no idea guys</param>
         /// <param name="Segmentation">Segmentation parameter</param>
-        public CountlyEvent(string Key, int Count, double? Sum, Segmentation Segmentation)
+        public CountlyEvent(string Key, int Count, double? Sum, double? Dur, Segmentation Segmentation)
         {
             if (String.IsNullOrWhiteSpace(Key))
             {
@@ -104,6 +112,7 @@ namespace CountlySDK.Entities
             this.Key = Key;
             this.Count = Count;
             this.Sum = Sum;
+            this.Dur = Dur;
             this.Segmentation = Segmentation;
         }
     }

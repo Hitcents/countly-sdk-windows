@@ -405,7 +405,7 @@ namespace CountlySDK
         /// <returns>True if event is uploaded successfully, False - queued for delayed upload</returns>
         public static Task<bool> RecordEvent(string Key)
         {
-            return RecordCountlyEvent(Key, 1, null, null);
+            return RecordCountlyEvent(Key, 1, null, null, null);
         }
 
         /// <summary>
@@ -416,7 +416,7 @@ namespace CountlySDK
         /// <returns>True if event is uploaded successfully, False - queued for delayed upload</returns>
         public static Task<bool> RecordEvent(string Key, int Count)
         {
-            return RecordCountlyEvent(Key, Count, null, null);
+            return RecordCountlyEvent(Key, Count, null, null, null);
         }
 
         /// <summary>
@@ -428,7 +428,7 @@ namespace CountlySDK
         /// <returns>True if event is uploaded successfully, False - queued for delayed upload</returns>
         public static Task<bool> RecordEvent(string Key, int Count, double Sum)
         {
-            return RecordCountlyEvent(Key, Count, Sum, null);
+            return RecordCountlyEvent(Key, Count, Sum, null, null);
         }
 
         /// <summary>
@@ -440,7 +440,7 @@ namespace CountlySDK
         /// <returns>True if event is uploaded successfully, False - queued for delayed upload</returns>
         public static Task<bool> RecordEvent(string Key, int Count, Segmentation Segmentation)
         {
-            return RecordCountlyEvent(Key, Count, null, Segmentation);
+            return RecordCountlyEvent(Key, Count, null, null, Segmentation);
         }
 
         /// <summary>
@@ -453,7 +453,21 @@ namespace CountlySDK
         /// <returns>True if event is uploaded successfully, False - queued for delayed upload</returns>
         public static Task<bool> RecordEvent(string Key, int Count, double Sum, Segmentation Segmentation)
         {
-            return RecordCountlyEvent(Key, Count, Sum, Segmentation);
+            return RecordCountlyEvent(Key, Count, Sum, null, Segmentation);
+        }
+
+        /// <summary>
+        /// Records a custom event with the specified segmentation values, count, a sum, and a Dur
+        /// </summary>
+        /// <param name="Key">Name of the custom event, required, must not be the empty string</param>
+        /// <param name="Count">Count to associate with the event, should be more than zero</param>
+        /// <param name="Sum">Sum to associate with the event</param>
+        /// <param name="Dur">Dur parameter, I have no idea guys</param>
+        /// <param name="Segmentation">Segmentation object to associate with the event, can be null</param>
+        /// <returns>True if event is uploaded successfully, False - queued for delayed upload</returns>
+        public static Task<bool> RecordEvent(string Key, int Count, double Sum, double Dur, Segmentation Segmentation)
+        {
+            return RecordCountlyEvent(Key, Count, Sum, Dur, Segmentation);
         }
 
         /// <summary>
@@ -464,9 +478,9 @@ namespace CountlySDK
         /// <param name="Sum">Sum to associate with the event</param>
         /// <param name="Segmentation">Segmentation object to associate with the event, can be null</param>
         /// <returns>True if event is uploaded successfully, False - queued for delayed upload</returns>
-        private static Task<bool> RecordCountlyEvent(string Key, int Count, double? Sum, Segmentation Segmentation)
+        private static Task<bool> RecordCountlyEvent(string Key, int Count, double? Sum, double? Dur, Segmentation Segmentation)
         {
-            return AddEvent(new CountlyEvent(Key, Count, Sum, Segmentation));
+            return AddEvent(new CountlyEvent(Key, Count, Sum, Dur, Segmentation));
         }
 
         /// <summary>
