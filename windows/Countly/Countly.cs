@@ -169,6 +169,7 @@ namespace CountlySDK
 
             ServerUrl = serverUrl;
             AppKey = appKey;
+            lastView = null;
 
             Events = await Storage.LoadFromFile<List<CountlyEvent>>(eventsFilename) ?? new List<CountlyEvent>();
 
@@ -216,6 +217,7 @@ namespace CountlySDK
 
             ServerUrl = serverUrl;
             AppKey = appKey;
+            lastView = null;
 
             Events = await Storage.LoadFromFile<List<CountlyEvent>>(eventsFilename) ?? new List<CountlyEvent>();
 
@@ -246,6 +248,8 @@ namespace CountlySDK
         /// </summary>
         public static async Task EndSession()
         {
+            lastView = null;
+
             if (Timer != null)
             {
 #if PCL
@@ -383,6 +387,7 @@ namespace CountlySDK
             {
                 ServerUrl = null;
                 AppKey = null;
+                lastView = null;
 
                 if (Timer != null)
                 {
