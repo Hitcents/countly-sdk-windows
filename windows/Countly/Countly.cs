@@ -197,40 +197,6 @@ namespace CountlySDK
         }
 
         /// <summary>
-        /// Starts Countly background tracking session.
-        /// Call from your background agent OnInvoke method.
-        /// Must be called before other SDK methods can be used.
-        /// </summary>
-        /// <param name="serverUrl"></param>
-        /// <param name="appKey"></param>
-        public static async void StartBackgroundSession(string serverUrl, string appKey)
-        {
-            if (String.IsNullOrWhiteSpace(serverUrl))
-            {
-                throw new ArgumentException("invalid server url");
-            }
-
-            if (String.IsNullOrWhiteSpace(appKey))
-            {
-                throw new ArgumentException("invalid application key");
-            }
-
-            ServerUrl = serverUrl;
-            AppKey = appKey;
-            lastView = null;
-
-            Events = await Storage.LoadFromFile<List<CountlyEvent>>(eventsFilename) ?? new List<CountlyEvent>();
-
-            Sessions = await Storage.LoadFromFile<List<SessionEvent>>(sessionsFilename) ?? new List<SessionEvent>();
-
-            Exceptions = await Storage.LoadFromFile<List<ExceptionEvent>>(exceptionsFilename) ?? new List<ExceptionEvent>();
-
-            UserDetails = await Storage.LoadFromFile<CountlyUserDetails>(userDetailsFilename) ?? new CountlyUserDetails();
-
-            UserDetails.UserDetailsChanged += OnUserDetailsChanged;
-        }
-
-        /// <summary>
         /// Sends session duration. Called automatically each <updateInterval> seconds
         /// </summary>
 #if PCL
