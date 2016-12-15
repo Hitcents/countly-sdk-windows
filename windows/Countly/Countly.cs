@@ -105,6 +105,9 @@ namespace CountlySDK
 
             public DateTime Time { get; set; }
 
+            /// <summary>
+            /// NOTE: this is needed in BeginSession, to send the last screen again
+            /// </summary>
             public Segmentation Segmentation { get; set; }
         }
 
