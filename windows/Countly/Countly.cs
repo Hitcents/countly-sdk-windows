@@ -181,7 +181,7 @@ namespace CountlySDK
 
             UserDetails.UserDetailsChanged += OnUserDetailsChanged;
              
-            startTime = DateTime.Now;
+            startTime = DateTime.UtcNow;
 
 #if PCL
             var interval = TimeSpan.FromSeconds(updateInterval);
@@ -239,7 +239,7 @@ namespace CountlySDK
         private static async void UpdateSession(object sender, object e)
 #endif
         {
-            await AddSessionEvent(new UpdateSession(AppKey, Device.DeviceId, (int)DateTime.Now.Subtract(startTime).TotalSeconds));
+            await AddSessionEvent(new UpdateSession(AppKey, Device.DeviceId, (int)DateTime.UtcNow.Subtract(startTime).TotalSeconds));
         }
 
         /// <summary>
@@ -716,7 +716,7 @@ namespace CountlySDK
                 throw new InvalidOperationException("session is not active");
             }
 
-            TimeSpan run = DateTime.Now.Subtract(startTime);
+            TimeSpan run = DateTime.UtcNow.Subtract(startTime);
 
             lock (sync)
             {
