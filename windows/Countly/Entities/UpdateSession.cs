@@ -40,7 +40,7 @@ namespace CountlySDK.Entities
             Content["app_key"] = appKey;
             Content["device_id"] = deviceId;
             Content["session_duration"] = duration.ToString();
-            Content["timestamp"] = TimeHelper.ToUnixTime(DateTime.UtcNow).ToString();
+            Content["timestamp"] = TimeHelper.ToUnixTime().ToString();
         }
     }
 }

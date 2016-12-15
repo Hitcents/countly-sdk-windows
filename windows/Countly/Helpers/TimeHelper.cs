@@ -29,9 +29,8 @@ namespace CountlySDK.Helpers
         /// <summary>
         /// Converts DateTime to Unix time format
         /// </summary>
-        /// <param name="date">DateTime object</param>
         /// <returns>Unix timestamp</returns>
-        public static Int32 ToUnixTime(DateTime date)
+        public static Int32 ToUnixTime()
         {
             return (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
         }
