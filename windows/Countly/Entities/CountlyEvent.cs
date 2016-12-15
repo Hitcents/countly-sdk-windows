@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+using CountlySDK.Helpers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -72,6 +73,10 @@ namespace CountlySDK.Entities
         [JsonIgnore]
         public Segmentation Segmentation { get; internal set; }
 
+        [DataMemberAttribute]
+        [JsonProperty("timestamp")]
+        public long Timestamp { get; internal set; }
+
         /// <summary>
         /// Segmentation json-ready object
         /// </summary>
@@ -114,6 +119,7 @@ namespace CountlySDK.Entities
             this.Sum = Sum;
             this.Dur = Dur;
             this.Segmentation = Segmentation;
+            this.Timestamp = TimeHelper.UnixNow();
         }
     }
 }

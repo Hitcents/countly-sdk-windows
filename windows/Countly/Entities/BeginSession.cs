@@ -45,7 +45,7 @@ namespace CountlySDK.Entities
             Content["sdk_version"] = sdkVersion;
             Content["begin_session"] = "1";
             Content["metrics"] = metrics.ToString();
-            Content["timestamp"] = TimeHelper.ToUnixTime(DateTime.UtcNow).ToString();
+            Content["timestamp"] = TimeHelper.UnixNow().ToString();
         }
     }
 }

@@ -26,14 +26,23 @@ namespace CountlySDK.Helpers
 {
     internal class TimeHelper
     {
+        private static readonly DateTime _epoc = new DateTime(1970, 1, 1);
+        private static readonly object _lock = new object();
+        private static long _lastTime;
+
         /// <summary>
-        /// Converts DateTime to Unix time format
+        /// Converts DateTime.UtcNow to Unix time format
         /// </summary>
-        /// <param name="date">DateTime object</param>
         /// <returns>Unix timestamp</returns>
-        public static Int32 ToUnixTime(DateTime date)
+        public static long UnixNow()
         {
-            return (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+            long time = (long)Math.Round(DateTime.UtcNow.Subtract(_epoc).TotalMilliseconds);
+            lock(_lock)
+            {
+                if (time == _lastTime)
+                    time++;
+                return _lastTime = time;
+            }
         }
     }
 }
