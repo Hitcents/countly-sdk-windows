@@ -104,6 +104,8 @@ namespace CountlySDK
             public string Name { get; set; }
 
             public DateTime Time { get; set; }
+
+            public Segmentation Segmentation { get; set; }
         }
 
         /// <summary>
@@ -169,7 +171,6 @@ namespace CountlySDK
 
             ServerUrl = serverUrl;
             AppKey = appKey;
-            lastView = null;
 
             Events = await Storage.LoadFromFile<List<CountlyEvent>>(eventsFilename) ?? new List<CountlyEvent>();
 
@@ -194,6 +195,15 @@ namespace CountlySDK
 #endif
 
             await AddSessionEvent(new BeginSession(AppKey, Device.DeviceId, sdkVersion));
+
+            var view = lastView;
+            if (view != null)
+            {
+                view.Time = DateTime.UtcNow;
+
+                var evt = new CountlyEvent(ViewEvent, 1, 0, null, view.Segmentation);
+                await AddEvent(evt);
+            }
         }
 
         /// <summary>
@@ -214,8 +224,6 @@ namespace CountlySDK
         /// </summary>
         public static async Task EndSession()
         {
-            lastView = null;
-
             if (Timer != null)
             {
 #if PCL
@@ -484,7 +492,7 @@ namespace CountlySDK
             {
                 evt = new CountlyEvent(ViewEvent, 1, 0, Math.Round((DateTime.UtcNow - view.Time).TotalSeconds, 2), segmentation);
             }
-            lastView = new View { Name = name, Time = DateTime.UtcNow };
+            lastView = new View { Name = name, Time = DateTime.UtcNow, Segmentation = segmentation };
             return AddEvent(evt);
         }
 

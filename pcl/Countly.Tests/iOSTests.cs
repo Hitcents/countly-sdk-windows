@@ -79,5 +79,26 @@ namespace CountlyTests
 
             await Countly.EndSession();
         }
+
+        [Test]
+        public async Task SendViewsWithStartEnd()
+        {
+            await Countly.StartSession(Server, ApiKey);
+            Countly.UserDetails.Name = "unit-test";
+
+            await Countly.RecordView("ScreenA", MakeSegment());
+            await Task.Delay(3500);
+            await Countly.RecordView("ScreenB", MakeSegment());
+            await Countly.EndSession();
+
+            //Should still be on ScreenB
+            await Countly.StartSession(Server, ApiKey);
+            await Task.Delay(1242);
+            await Countly.RecordView("ScreenC", MakeSegment());
+            await Task.Delay(2322);
+            await Countly.RecordView("ScreenD", MakeSegment());
+
+            await Countly.EndSession();
+        }
     }
 }
