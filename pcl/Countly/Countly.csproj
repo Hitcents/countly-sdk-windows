@@ -49,9 +49,6 @@
     <Compile Include="..\..\windows\Countly\Entities\CustomInfo.cs">
       <Link>Entities\CustomInfo.cs</Link>
     </Compile>
-    <Compile Include="..\..\windows\Countly\Entities\CustomInfoItem.cs">
-      <Link>Entities\CustomInfoItem.cs</Link>
-    </Compile>
     <Compile Include="..\..\windows\Countly\Entities\EndSession.cs">
       <Link>Entities\EndSession.cs</Link>
     </Compile>

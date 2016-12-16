@@ -41,7 +41,7 @@ namespace CountlySDK.Entities
         internal event CollectionChangedEventHandler CollectionChanged;
 
         [DataMemberAttribute]
-        internal List<CustomInfoItem> items { get; set; }
+        internal readonly Dictionary<string, string> Items = new Dictionary<string, string>();
 
         /// <summary>
         /// Adds new custom item
@@ -50,18 +50,22 @@ namespace CountlySDK.Entities
         /// <param name="Value">item value</param>
         public void Add(string Name, string Value)
         {
-            if (this[Name] != null)
+            string existing;
+            if (Items.TryGetValue(Name, out existing))
             {
-                Remove(Name);
+                if (existing == Value)
+                    return;
+
+                if (Value == null)
+                    Items.Remove(Name);
             }
 
             if (Value != null)
             {
-                items.Add(new CustomInfoItem(Name, Value));
+                Items[Name] = Value;
             }
 
-            if (CollectionChanged != null)
-                CollectionChanged();
+            CollectionChanged?.Invoke();
         }
 
         /// <summary>
@@ -70,14 +74,9 @@ namespace CountlySDK.Entities
         /// <param name="Name">item name</param>
         public void Remove(string Name)
         {
-            CustomInfoItem customInfoItem = items.FirstOrDefault(c => c.Name == Name);
-
-            if (customInfoItem != null)
+            if (Items.Remove(Name))
             {
-                items.Remove(customInfoItem);
-
-                if (CollectionChanged != null)
-                    CollectionChanged();
+                CollectionChanged?.Invoke();
             }
         }
 
@@ -86,10 +85,9 @@ namespace CountlySDK.Entities
         /// </summary>
         public void Clear()
         {
-            items.Clear();
+            Items.Clear();
 
-            if (CollectionChanged != null)
-                CollectionChanged();
+            CollectionChanged?.Invoke();
         }
 
         /// <summary>
@@ -101,44 +99,14 @@ namespace CountlySDK.Entities
         {
             get
             {
-                CustomInfoItem customInfoItem = items.FirstOrDefault(c => c.Name == name);
-
-                if (customInfoItem != null)
-                {
-                    return customInfoItem.Value;
-                }
-                else
-                {
-                    return null;
-                }
+                string value;
+                Items.TryGetValue(name, out value);
+                return value;
             }
             set
             {
                 Add(name, value);
             }
-        }
-
-        public CustomInfo()
-        {
-            items = new List<CustomInfoItem>();
-        }
-
-        /// <summary>
-        /// Returns items as key/value dictionary pairs
-        /// </summary>
-        /// <returns></returns>
-        internal Dictionary<string, string> ToDictionary()
-        {
-            if (items.Count == 0) return null;
-
-            Dictionary<string, string> dictionary = new Dictionary<string, string>();
-
-            foreach (CustomInfoItem item in items)
-            {
-                dictionary.Add(item.Name, item.Value);
-            }
-
-            return dictionary;
         }
     }
 }

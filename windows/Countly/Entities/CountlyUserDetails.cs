@@ -274,7 +274,7 @@ namespace CountlySDK.Entities
         {
             get
             {
-                return Custom.ToDictionary();
+                return Custom.Items;
             }
         }
 
