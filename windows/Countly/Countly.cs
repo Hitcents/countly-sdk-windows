@@ -120,7 +120,6 @@ namespace CountlySDK
             AppKey = appKey;
 
             Events.Clear();
-            UserDetails = new CountlyUserDetails();
              
             startTime = DateTime.UtcNow;
 
