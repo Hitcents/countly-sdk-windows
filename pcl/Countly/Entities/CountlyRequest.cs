@@ -23,7 +23,7 @@ namespace CountlySDK.Entities
 
         public ExceptionEvent Exception { get; set; }
 
-        public FormUrlEncodedContent ToContent()
+        public Dictionary<string, string> ToContent()
         {
             var dict = SessionEvent?.Content ?? new Dictionary<string, string>();
 
@@ -33,13 +33,13 @@ namespace CountlySDK.Entities
             if (UserDetails != null)
                 dict[Names.UserDetails] = JsonConvert.SerializeObject(UserDetails, Api.JsonSettings);
 
-            if (Events != null)
+            if (Events != null && Events.Count > 0)
                 dict[Names.Events] = JsonConvert.SerializeObject(Events, Api.JsonSettings);
 
             if (Exception != null)
                 dict[Names.Exception] = JsonConvert.SerializeObject(Exception, Api.JsonSettings);
 
-            return new FormUrlEncodedContent(dict);
+            return dict;
         }
     }
 }

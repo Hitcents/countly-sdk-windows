@@ -1,8 +1,6 @@
 ﻿using CountlySDK.Entities;
-using CountlySDK.Server.Responses;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -22,13 +20,19 @@ namespace CountlySDK
             try
             {
                 string address = serverUrl + "/i";
+                var post = request.ToContent();
 
                 if (Countly.IsLoggingEnabled)
                 {
                     Countly.Log("POST {0}", address);
+
+                    foreach (var pair in post)
+                    {
+                        Countly.Log("{0}={1}", pair.Key, pair.Value);
+                    }
                 }
 
-                var response = await _httpClient.PostAsync(address, request.ToContent());
+                var response = await _httpClient.PostAsync(address, new FormUrlEncodedContent(post));
                 response.EnsureSuccessStatusCode();
 
                 string json = await response.Content.ReadAsStringAsync();
