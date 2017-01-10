@@ -4,6 +4,7 @@ using System.Runtime.Serialization;
 
 namespace CountlySDK.Entities
 {
+    [DataContract]
     internal class CountlyRequest
     {
         public static CountlyRequest CreateBeginSession()
@@ -35,11 +36,15 @@ namespace CountlySDK.Entities
 
         public CountlyRequest()
         {
+            DeviceId = Device.DeviceId;
             TimeStamp = TimeHelper.ToUnixTime().ToString();
         }
 
         [DataMember(Name = "sdk_version", EmitDefaultValue = false)]
         public string SdkVersion { get; set; }
+
+        [DataMember(Name = "device_id", EmitDefaultValue = false)]
+        public string DeviceId { get; set; }
 
         [DataMember(Name = "begin_session", EmitDefaultValue = false)]
         public string BeginSession { get; set; }
