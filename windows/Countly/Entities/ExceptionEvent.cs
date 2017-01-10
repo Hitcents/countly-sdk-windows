@@ -148,7 +148,7 @@ namespace CountlySDK.Entities
         public ExceptionEvent()
         { }
 
-        public ExceptionEvent(string Error, string StackTrace, bool fatal, string breadcrumb, TimeSpan run, Dictionary<string, string> customInfo)
+        public ExceptionEvent(string Error, string StackTrace, bool fatal, StringBuilder breadCrumb, TimeSpan run, Dictionary<string, string> customInfo)
         {
             //device metrics
             OS = CountlySDK.Entities.Device.OS;
@@ -169,7 +169,7 @@ namespace CountlySDK.Entities
             this.Name = Error;
             this.Error = StackTrace;
             NonFatal = !fatal;
-            Logs = breadcrumb;
+            Logs = breadCrumb.ToString();
             Run = (long)run.TotalSeconds;
             Custom = customInfo;
         }

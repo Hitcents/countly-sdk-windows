@@ -34,6 +34,7 @@ using CountlySDK.Server.Responses;
 using System.IO;
 using Newtonsoft.Json;
 using System.Diagnostics;
+using System.Text;
 #if !PCL
 using Windows.UI.Xaml;
 #endif
@@ -68,7 +69,7 @@ namespace CountlySDK
         // User details info
         public static CountlyUserDetails UserDetails { get; set; } = new CountlyUserDetails();
 
-        private static string breadcrumb = String.Empty;
+        private static StringBuilder breadCrumb = new StringBuilder();
 
         // Start session timestamp
         private static DateTime startTime;
@@ -224,7 +225,7 @@ namespace CountlySDK
                 }
 
                 Events.Clear();
-                breadcrumb = String.Empty;
+                breadCrumb = new StringBuilder();
                 UserDetails = new CountlyUserDetails();
             }
         }
@@ -336,7 +337,7 @@ namespace CountlySDK
         /// <returns>True if exception successfully uploaded, False - queued for delayed upload</returns>
         private static Task<bool> RecordException(string error, string stackTrace, Dictionary<string, string> customInfo, bool unhandled)
         {
-            return Upload(exception: new ExceptionEvent(error, stackTrace, unhandled, breadcrumb, DateTime.UtcNow.Subtract(startTime), customInfo));
+            return Upload(exception: new ExceptionEvent(error, stackTrace, unhandled, breadCrumb, DateTime.UtcNow.Subtract(startTime), customInfo));
         }
 
         /// <summary>
@@ -345,7 +346,7 @@ namespace CountlySDK
         /// <param name="log">log string</param>
         public static void AddBreadCrumb(string log)
         {
-            breadcrumb += log + "\r\n";
+            breadCrumb.AppendLine(log);
         }
 
         /// <summary>
