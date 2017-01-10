@@ -38,13 +38,6 @@ namespace CountlySDK.Entities
     [DataContractAttribute]
     public class CountlyUserDetails
     {
-        internal delegate void UserDetailsChangedEventHandler();
-
-        /// <summary>
-        /// raised when any of properties are changed
-        /// </summary>
-        internal event UserDetailsChangedEventHandler UserDetailsChanged;
-
         private string name;
         /// <summary>
         /// Name
@@ -278,39 +271,15 @@ namespace CountlySDK.Entities
             }
         }
 
-        private
-            #if !PCL
-            async 
-            #endif
-            void NotifyDetailsChanged()
+        private void NotifyDetailsChanged()
         {
-            if (UserDetailsChanged != null)
-            {
-                isNotified = false;
-
-#if !PCL
-                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                () =>
-                {
-#endif
-                    if (!isNotified)
-                    {
-                        isNotified = true;
-
-                        UserDetailsChanged();
-                    }
-#if !PCL
-                });
-#endif
-            }
+            //NOTE: leaving this method for now if we need to put the event back
+            isChanged = true;
         }
 
         [JsonIgnore]
         [DataMemberAttribute]
         internal bool isChanged { get; set; }
-
-        [JsonIgnore]
-        internal bool isNotified { get; set; }
 
         public CountlyUserDetails()
         {

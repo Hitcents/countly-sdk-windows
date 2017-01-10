@@ -59,15 +59,6 @@ namespace CountlySDK
         // Indicates sync process with a server
         private static bool uploadInProgress;
 
-        // File that stores events objects
-        private const string eventsFilename = "events.json";
-        // File that stores sessions objects
-        private const string sessionsFilename = "sessions.json";
-        // File that stores exceptions objects
-        private const string exceptionsFilename = "exceptions.json";
-        // File that stores user details object
-        private const string userDetailsFilename = "userdetails.json";
-
         private const string DebugLabel = "Count.ly: ";
         private const string ViewEvent = "[CLY]_view";
 
@@ -75,16 +66,16 @@ namespace CountlySDK
         private static object sync = new object();
 
         // Events queue
-        private static List<CountlyEvent> Events { get; set; }
+        private static List<CountlyEvent> Events { get; set; } = new List<CountlyEvent>(0);
 
         // Session queue
-        private static List<SessionEvent> Sessions { get; set; }
+        private static List<SessionEvent> Sessions { get; set; } = new List<SessionEvent>(0);
 
         // Exceptions queue
-        private static List<ExceptionEvent> Exceptions { get; set; }
+        private static List<ExceptionEvent> Exceptions { get; set; } = new List<ExceptionEvent>(0);
 
         // User details info
-        public static CountlyUserDetails UserDetails { get; set; }
+        public static CountlyUserDetails UserDetails { get; set; } = new CountlyUserDetails();
 
         private static string breadcrumb = String.Empty;
 
@@ -122,38 +113,6 @@ namespace CountlySDK
         public static bool IsExceptionsLoggingEnabled { get; set; }
 
         /// <summary>
-        /// Saves events to the storage
-        /// </summary>
-        private static async Task SaveEvents()
-        {
-            await Storage.SaveToFile(eventsFilename, Events);
-        }
-
-        /// <summary>
-        /// Saves sessions to the storage
-        /// </summary>
-        private static async Task SaveSessions()
-        {
-            await Storage.SaveToFile(sessionsFilename, Sessions);
-        }
-
-        /// <summary>
-        /// Saves exceptions to the storage
-        /// </summary>
-        private static async Task SaveExceptions()
-        {
-            await Storage.SaveToFile(exceptionsFilename, Exceptions);
-        }
-
-        /// <summary>
-        /// Saves user details info to the storage
-        /// </summary>
-        private static async Task SaveUserDetails()
-        {
-            await Storage.SaveToFile(userDetailsFilename, UserDetails);
-        }
-
-        /// <summary>
         /// Starts Countly tracking session.
         /// Call from your App.xaml.cs Application_Launching and Application_Activated events.
         /// Must be called before other SDK methods can be used.
@@ -175,15 +134,10 @@ namespace CountlySDK
             ServerUrl = serverUrl;
             AppKey = appKey;
 
-            Events = await Storage.LoadFromFile<List<CountlyEvent>>(eventsFilename) ?? new List<CountlyEvent>();
-
-            Sessions = await Storage.LoadFromFile<List<SessionEvent>>(sessionsFilename) ?? new List<SessionEvent>();
-
-            Exceptions = await Storage.LoadFromFile<List<ExceptionEvent>>(exceptionsFilename) ?? new List<ExceptionEvent>();
-
-            UserDetails = await Storage.LoadFromFile<CountlyUserDetails>(userDetailsFilename) ?? new CountlyUserDetails();
-
-            UserDetails.UserDetailsChanged += OnUserDetailsChanged;
+            Events.Clear();
+            Sessions.Clear();
+            Exceptions.Clear();
+            UserDetails = new CountlyUserDetails();
              
             startTime = DateTime.UtcNow;
 
@@ -197,7 +151,7 @@ namespace CountlySDK
             Timer.Start();
 #endif
 
-            await AddSessionEvent(new BeginSession(AppKey, Device.DeviceId, sdkVersion));
+            AddSessionEvent(new BeginSession(AppKey, Device.DeviceId, sdkVersion));
 
             var view = lastView;
             if (view != null)
@@ -213,12 +167,12 @@ namespace CountlySDK
         /// Sends session duration. Called automatically each <updateInterval> seconds
         /// </summary>
 #if PCL
-        private static async void UpdateSession(object state)
+        private static void UpdateSession(object state)
 #else
-        private static async void UpdateSession(object sender, object e)
+        private static void UpdateSession(object sender, object e)
 #endif
         {
-            await AddSessionEvent(new UpdateSession(AppKey, Device.DeviceId, (int)DateTime.UtcNow.Subtract(startTime).TotalSeconds));
+            AddSessionEvent(new UpdateSession(AppKey, Device.DeviceId, (int)DateTime.UtcNow.Subtract(startTime).TotalSeconds));
         }
 
         /// <summary>
@@ -238,15 +192,15 @@ namespace CountlySDK
                 Timer = null;
             }
 
-            await AddSessionEvent(new EndSession(AppKey, Device.DeviceId), true);
+            AddSessionEvent(new EndSession(AppKey, Device.DeviceId));
+            await Upload();
         }
 
         /// <summary>
         ///  Adds session event to queue and uploads
         /// </summary>
         /// <param name="sessionEvent">session event object</param>
-        /// <param name="uploadImmediately">indicates when start to upload, by default - immediately after event was added</param>
-        private static async Task AddSessionEvent(SessionEvent sessionEvent, bool uploadImmediately = true)
+        private static void AddSessionEvent(SessionEvent sessionEvent)
         {
             if (String.IsNullOrWhiteSpace(ServerUrl))
             {
@@ -257,19 +211,11 @@ namespace CountlySDK
             {
                 Sessions.Add(sessionEvent);
             }
-
-            await SaveSessions();
-
-            if (uploadImmediately)
-            {
-                await Upload();
-            }
         }
 
         /// <summary>
         /// Uploads sessions queue to Countly server
         /// </summary>
-        /// <returns></returns>
         private static async Task<bool> UploadSessions()
         {
             lock (sync)
@@ -297,8 +243,6 @@ namespace CountlySDK
                 {
                     UserDetails.isChanged = false;
 
-                    await SaveUserDetails();
-
                     lock (sync)
                     {
                         uploadInProgress = false;
@@ -309,8 +253,6 @@ namespace CountlySDK
                         }
                         catch { }
                     }
-
-                    await Storage.SaveToFile<List<SessionEvent>>(sessionsFilename, Sessions);
 
                     if (Sessions.Count > 0)
                     {
@@ -358,7 +300,7 @@ namespace CountlySDK
         /// InvalidOperationException after calling this until Countly is reinitialized by calling StartSession
         /// again.
         /// </summary>
-        public static async void Halt()
+        public static void Halt()
         {
             lock (sync)
             {
@@ -383,11 +325,6 @@ namespace CountlySDK
                 breadcrumb = String.Empty;
                 UserDetails = new CountlyUserDetails();
             }
-
-            await Storage.DeleteFile(eventsFilename);
-            await Storage.DeleteFile(sessionsFilename);
-            await Storage.DeleteFile(exceptionsFilename);
-            await Storage.DeleteFile(userDetailsFilename);
         }
 
         /// <summary>
@@ -515,8 +452,6 @@ namespace CountlySDK
                 Events.Add(countlyEvent);
             }
 
-            await SaveEvents();
-
             return await Upload();
         }
 
@@ -551,8 +486,6 @@ namespace CountlySDK
 
                     UserDetails.isChanged = false;
 
-                    await SaveUserDetails();
-
                     lock (sync)
                     {
                         uploadInProgress = false;
@@ -568,8 +501,6 @@ namespace CountlySDK
 
                         eventsCountToUploadAgain = Events.Count;
                     }
-
-                    await Storage.SaveToFile<List<CountlyEvent>>(eventsFilename, Events);
 
                     if (eventsCountToUploadAgain > 0)
                     {
@@ -602,9 +533,7 @@ namespace CountlySDK
         private static async void OnUserDetailsChanged()
         {
             UserDetails.isChanged = true;
-
-            await SaveUserDetails();
-
+            
             await UploadUserDetails();
         }
 
@@ -624,9 +553,6 @@ namespace CountlySDK
             if (resultResponse != null && resultResponse.IsSuccess)
             {
                 UserDetails.isChanged = false;
-
-                await SaveUserDetails();
-
                 return true;
             }
             else
@@ -686,7 +612,7 @@ namespace CountlySDK
         /// <param name="customInfo">exception custom info</param>
         /// <param name="unhandled">bool indicates is exception is fatal or not</param>
         /// <returns>True if exception successfully uploaded, False - queued for delayed upload</returns>
-        private static async Task<bool> RecordException(string error, string stackTrace, Dictionary<string, string> customInfo, bool unhandled)
+        private static Task<bool> RecordException(string error, string stackTrace, Dictionary<string, string> customInfo, bool unhandled)
         {
             if (String.IsNullOrWhiteSpace(ServerUrl))
             {
@@ -700,16 +626,8 @@ namespace CountlySDK
                 Exceptions.Add(new ExceptionEvent(error, stackTrace, unhandled, breadcrumb, run, customInfo));
             }
 
-            await SaveExceptions();
-
-            if (!unhandled)
-            {
-                return await Upload();
-            }
-            else
-            {
-                return true;
-            }
+            //NOTE: I don't think we need to auto-upload
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -754,8 +672,6 @@ namespace CountlySDK
                         exceptionsCountToUploadAgain = Exceptions.Count;
                     }
 
-                    await SaveExceptions();
-
                     if (exceptionsCountToUploadAgain > 0)
                     {
                         // Upload next exception
@@ -794,7 +710,7 @@ namespace CountlySDK
         /// Upload sessions, events & exception queues
         /// </summary>
         /// <returns>True if success</returns>
-        private static async Task<bool> Upload()
+        public static async Task<bool> Upload()
         {
             bool success = await UploadSessions();
 
