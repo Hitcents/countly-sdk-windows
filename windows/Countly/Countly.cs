@@ -156,7 +156,7 @@ namespace CountlySDK
                 Timer = null;
             }
             
-            await Upload(CountlyRequest.CreateEndSession(startTime));
+            await Upload(CountlyRequest.CreateUpdateSession(startTime), CountlyRequest.CreateEndSession());
         }
 
         /// <summary>
@@ -273,30 +273,30 @@ namespace CountlySDK
             return Upload(CountlyRequest.CreateUpdateSession(startTime));
         } 
 
-        private static async Task<bool> Upload(CountlyRequest request)
+        private static async Task<bool> Upload(params CountlyRequest[] requests)
         {
             if (string.IsNullOrWhiteSpace(ServerUrl))
             {
                 throw new InvalidOperationException("session is not active");
             }
 
-            var requests = new List<CountlyRequest>();
+            var list = new List<CountlyRequest>();
 
             lock(sync)
             {
                 if (UserDetails.HasChanges)
                 {
-                    request.UserDetails = UserDetails;
+                    requests[0].UserDetails = UserDetails;
                     UserDetails.HasChanges = false;
                 }
 
-                requests.AddRange(Events);
+                list.AddRange(Events);
                 Events.Clear();
             }
 
-            requests.Add(request);
+            list.AddRange(requests);
 
-            var response = await Api.Call<ResultResponse>(ServerUrl, requests);
+            var response = await Api.Call<ResultResponse>(ServerUrl, list);
             return response.IsSuccess;
         }
 

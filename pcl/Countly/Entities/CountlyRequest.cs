@@ -25,12 +25,11 @@ namespace CountlySDK.Entities
             };
         }
 
-        public static CountlyRequest CreateEndSession(DateTime startTime)
+        public static CountlyRequest CreateEndSession()
         {
             return new CountlyRequest
             {
                 EndSession = "1",
-                Duration = (int)DateTime.UtcNow.Subtract(startTime).TotalSeconds,
             };
         }
 
