@@ -68,6 +68,8 @@ namespace CountlyTests
         {
             await Countly.StartSession(Server, ApiKey);
             Countly.UserDetails.Name = "unit-test";
+            Countly.UserDetails.Custom["Level"] = "1";
+            Countly.UserDetails.Custom["Team"] = "Warriors";
 
             await Countly.RecordView("ScreenA", MakeSegment());
             await Task.Delay(3500);
@@ -76,6 +78,7 @@ namespace CountlyTests
             await Countly.RecordView("ScreenC", MakeSegment());
             await Task.Delay(2322);
             await Countly.RecordView("ScreenD", MakeSegment());
+            await Countly.RecordView("ScreenE", MakeSegment());
 
             await Countly.EndSession();
         }
@@ -97,6 +100,40 @@ namespace CountlyTests
             await Countly.RecordView("ScreenC", MakeSegment());
             await Task.Delay(2322);
             await Countly.RecordView("ScreenD", MakeSegment());
+
+            await Countly.EndSession();
+        }
+
+        [Test]
+        public async Task SendAction()
+        {
+            await Countly.StartSession(Server, ApiKey);
+            Countly.UserDetails.Name = "unit-test";
+
+            await Countly.RecordView("ScreenA", MakeSegment());
+
+            var segmentation = MakeSegment();
+            segmentation.Add("type", "click");
+            segmentation.Add("x", "0");
+            segmentation.Add("y", "0");
+            segmentation.Add("width", "0");
+            segmentation.Add("height", "0");
+            await Countly.RecordEvent("[CLY]_action", 1, 0, segmentation);
+
+            await Countly.EndSession();
+        }
+
+        [Test]
+        public async Task SendBunchOfEvents()
+        {
+            await Countly.StartSession(Server, ApiKey);
+            Countly.UserDetails.Name = "unit-test";
+
+            await Countly.RecordEvent("ScreenA", 1, 0, MakeSegment());
+            await Countly.RecordEvent("ScreenB", 1, 0, MakeSegment());
+            await Countly.RecordEvent("ScreenC", 1, 0, MakeSegment());
+            await Countly.RecordEvent("ScreenD", 1, 0, MakeSegment());
+            await Countly.RecordEvent("ScreenE", 1, 0, MakeSegment());
 
             await Countly.EndSession();
         }
