@@ -35,9 +35,6 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System.Text;
-#if !PCL
-using Windows.UI.Xaml;
-#endif
 
 namespace CountlySDK
 {
@@ -74,11 +71,7 @@ namespace CountlySDK
         // Start session timestamp
         private static DateTime startTime;
         // Update session timer
-#if PCL
         private static Timer Timer;
-#else
-        private static DispatcherTimer Timer;
-#endif
 
         private static View lastView;
 
@@ -131,15 +124,8 @@ namespace CountlySDK
              
             startTime = DateTime.UtcNow;
 
-#if PCL
             var interval = TimeSpan.FromSeconds(updateInterval);
             Timer = new Timer(UpdateSession, null, interval, interval);
-#else
-            Timer = new DispatcherTimer();
-            Timer.Interval = TimeSpan.FromSeconds(updateInterval);
-            Timer.Tick += UpdateSession;
-            Timer.Start();
-#endif
 
             var view = lastView;
             if (view != null)
@@ -154,11 +140,7 @@ namespace CountlySDK
         /// <summary>
         /// Sends session duration. Called automatically each <updateInterval> seconds
         /// </summary>
-#if PCL
         private static async void UpdateSession(object state)
-#else
-        private static async void UpdateSession(object sender, object e)
-#endif
         {
             await Upload();
         }
@@ -171,32 +153,12 @@ namespace CountlySDK
         {
             if (Timer != null)
             {
-#if PCL
                 Timer.Dispose();
-#else
-                Timer.Stop();
-                Timer.Tick -= UpdateSession;
-#endif
                 Timer = null;
             }
             
             await Upload(CountlyRequest.CreateEndSession());
         }
-
-        /// <summary>
-        /// Raised when application unhandled exception is thrown
-        /// </summary>
-        /// <param name="sender">sender param</param>
-        /// <param name="e">exception details</param>
-#if !PCL
-        private static async void OnApplicationUnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            if (IsExceptionsLoggingEnabled)
-            {
-                await RecordUnhandledException(e.Exception.Message, e.Exception.StackTrace);
-            }
-        }
-#endif
 
         /// <summary>
         /// Immediately disables session, event, exceptions & user details tracking and clears any stored sessions, events, exceptions & user details data.
@@ -215,12 +177,7 @@ namespace CountlySDK
 
                 if (Timer != null)
                 {
-#if PCL
                     Timer.Dispose();
-#else
-                    Timer.Stop();
-                    Timer.Tick -= UpdateSession;
-#endif
                     Timer = null;
                 }
 
