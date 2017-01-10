@@ -285,49 +285,6 @@ namespace CountlySDK
         }
 
         /// <summary>
-        /// Records exception
-        /// </summary>
-        /// <param name="error">exception title</param>
-        /// <returns>True if exception successfully uploaded, False - queued for delayed upload</returns>
-        public static Task<bool> RecordException(string error)
-        {
-            return RecordException(error, null, null);
-        }
-
-        /// <summary>
-        /// Records exception with stacktrace
-        /// </summary>
-        /// <param name="error">exception title</param>
-        /// <param name="stackTrace">exception stacktrace</param>
-        /// <returns>True if exception successfully uploaded, False - queued for delayed upload</returns>
-        public static Task<bool> RecordException(string error, string stackTrace)
-        {
-            return RecordException(error, stackTrace, null);
-        }
-
-        /// <summary>
-        /// Records unhandled exception with stacktrace
-        /// </summary>
-        /// <param name="error">exception title</param>
-        /// <param name="stackTrace">exception stacktrace</param>
-        private static Task<bool> RecordUnhandledException(string error, string stackTrace)
-        {
-            return RecordException(error, stackTrace, null, true);
-        }
-
-        /// <summary>
-        /// Records exception with stacktrace and custom info
-        /// </summary>
-        /// <param name="error">exception title</param>
-        /// <param name="stackTrace">exception stacktrace</param>
-        /// <param name="customInfo">exception custom info</param>
-        /// <returns>True if exception successfully uploaded, False - queued for delayed upload</returns>
-        public static Task<bool> RecordException(string error, string stackTrace, Dictionary<string, string> customInfo)
-        {
-            return RecordException(error, stackTrace, customInfo, false);
-        }
-
-        /// <summary>
         /// Records exception with stacktrace and custom info
         /// </summary>
         /// <param name="error">exception title</param>
@@ -335,14 +292,14 @@ namespace CountlySDK
         /// <param name="customInfo">exception custom info</param>
         /// <param name="unhandled">bool indicates is exception is fatal or not</param>
         /// <returns>True if exception successfully uploaded, False - queued for delayed upload</returns>
-        private static Task<bool> RecordException(string error, string stackTrace, Dictionary<string, string> customInfo, bool unhandled)
+        public static Task<bool> RecordException(string error, string stackTrace, Dictionary<string, string> customInfo = null, bool unhandled = false)
         {
             return Upload(exception: new ExceptionEvent(error, stackTrace, unhandled, breadCrumb, DateTime.UtcNow.Subtract(startTime), customInfo));
         }
 
         /// <summary>
         /// Adds log breadcrumb
-        /// </summary>
+        /// </summary> 
         /// <param name="log">log string</param>
         public static void AddBreadCrumb(string log)
         {
