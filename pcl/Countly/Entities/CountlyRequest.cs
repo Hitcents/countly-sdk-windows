@@ -19,10 +19,13 @@ namespace CountlySDK.Entities
 
         public static CountlyRequest CreateUpdateSession(DateTime startTime)
         {
-            return new CountlyRequest
+            var request = new CountlyRequest
             {
-                Duration = (int)DateTime.UtcNow.Subtract(startTime).TotalSeconds,
+                Duration = (int)DateTime.UtcNow.Subtract(startTime).TotalSeconds - 1,
             };
+            //HACK: we always subtract 1 here so that UpdateSession is 1 behind EndSession
+            request.TimeStamp--;
+            return request;
         }
 
         public static CountlyRequest CreateEndSession()
@@ -36,7 +39,7 @@ namespace CountlySDK.Entities
         public CountlyRequest()
         {
             DeviceId = Device.DeviceId;
-            TimeStamp = TimeHelper.ToUnixTime().ToString();
+            TimeStamp = TimeHelper.ToUnixTime();
         }
 
         [DataMember(Name = "sdk_version", EmitDefaultValue = false)]
@@ -55,7 +58,7 @@ namespace CountlySDK.Entities
         public string EndSession { get; set; }
 
         [DataMember(Name = "timestamp", EmitDefaultValue = false)]
-        public string TimeStamp { get; set; }
+        public int TimeStamp { get; set; }
 
         [DataMember(Name = "user_details", EmitDefaultValue = false)]
         public CountlyUserDetails UserDetails { get; set; }
