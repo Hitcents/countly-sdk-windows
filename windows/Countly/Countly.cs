@@ -235,6 +235,7 @@ namespace CountlySDK
                 Events.Add(new CountlyRequest
                 {
                     Events = new[] { countlyEvent },
+                    TimeStamp = TimeHelper.ToUnixTime(),
                 });
             }
         }
