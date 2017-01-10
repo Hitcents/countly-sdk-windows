@@ -11,7 +11,7 @@ namespace CountlyTests
     {
         private const string Server = "https://try.count.ly";
         private const string ApiKey = "<your-key-here>";
-        private const string DeviceId = "39A9B658F49D474BB565DA868C54A6DF";
+        private const string DeviceId = "39A9B658F49D474BB565DA868C54A6DE";
         private const string UserName = "Donald Trump";
 
         [SetUp]
@@ -42,8 +42,8 @@ namespace CountlyTests
         [Test]
         public async Task RecordEvent()
         {
-            await Countly.StartSession(Server, ApiKey);
             Countly.UserDetails.Name = UserName;
+            await Countly.StartSession(Server, ApiKey);
 
             var segmentation = new Segmentation();
             segmentation.Add("test", new Random().Next(10).ToString());
@@ -55,8 +55,8 @@ namespace CountlyTests
         [Test]
         public async Task SendException()
         {
-            await Countly.StartSession(Server, ApiKey);
             Countly.UserDetails.Name = UserName;
+            await Countly.StartSession(Server, ApiKey);
 
             await Countly.RecordException("Oh no!", "this is a trace\nmorelines\n");
 
@@ -86,8 +86,8 @@ namespace CountlyTests
         [Test]
         public async Task SendViewsWithStartEnd()
         {
-            await Countly.StartSession(Server, ApiKey);
             Countly.UserDetails.Name = UserName;
+            await Countly.StartSession(Server, ApiKey);
 
             Countly.RecordView("ScreenA", MakeSegment());
             await Task.Delay(3500);
@@ -107,8 +107,8 @@ namespace CountlyTests
         [Test]
         public async Task SendAction()
         {
-            await Countly.StartSession(Server, ApiKey);
             Countly.UserDetails.Name = UserName;
+            await Countly.StartSession(Server, ApiKey);
 
             Countly.RecordView("ScreenA", MakeSegment());
 
