@@ -156,7 +156,7 @@ namespace CountlySDK
                 Timer = null;
             }
             
-            await Upload(CountlyRequest.CreateEndSession());
+            await Upload(CountlyRequest.CreateEndSession(startTime));
         }
 
         /// <summary>

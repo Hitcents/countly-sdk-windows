@@ -21,16 +21,16 @@ namespace CountlySDK.Entities
         {
             return new CountlyRequest
             {
-                EndSession = "1",
                 Duration = (int)DateTime.UtcNow.Subtract(startTime).TotalSeconds,
             };
         }
 
-        public static CountlyRequest CreateEndSession()
+        public static CountlyRequest CreateEndSession(DateTime startTime)
         {
             return new CountlyRequest
             {
                 EndSession = "1",
+                Duration = (int)DateTime.UtcNow.Subtract(startTime).TotalSeconds,
             };
         }
 
