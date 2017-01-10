@@ -284,10 +284,10 @@ namespace CountlySDK
 
             lock(sync)
             {
-                if (UserDetails.isChanged)
+                if (UserDetails.HasChanges)
                 {
                     request.UserDetails = UserDetails;
-                    UserDetails.isChanged = false;
+                    UserDetails.HasChanges = false;
                 }
 
                 requests.AddRange(Events);
