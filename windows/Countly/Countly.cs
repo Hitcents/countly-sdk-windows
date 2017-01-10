@@ -231,15 +231,12 @@ namespace CountlySDK
         /// <param name="countlyEvent">event object</param>
         private static void AddEvent(CountlyEvent countlyEvent)
         {
-            if (string.IsNullOrWhiteSpace(ServerUrl))
-            {
-                throw new InvalidOperationException("session is not active");
-            }
             lock (sync)
             {
-                var request = CountlyRequest.CreateEvent(countlyEvent);
-
-                Events.Add(request);
+                Events.Add(new CountlyRequest
+                {
+                    Events = new[] { countlyEvent },
+                });
             }
         }
 
@@ -253,7 +250,10 @@ namespace CountlySDK
         /// <returns>True if exception successfully uploaded, False - queued for delayed upload</returns>
         public static Task<bool> RecordException(string error, string stackTrace, Dictionary<string, string> customInfo = null, bool unhandled = false)
         {
-            return Upload(CountlyRequest.CreateException(new ExceptionEvent(error, stackTrace, unhandled, breadCrumb, DateTime.UtcNow.Subtract(startTime), customInfo)));
+            return Upload(new CountlyRequest
+            {
+                Exception = new ExceptionEvent(error, stackTrace, unhandled, breadCrumb, startTime, customInfo),
+            });
         }
 
         /// <summary>

@@ -13,7 +13,6 @@ namespace CountlySDK.Entities
                 SdkVersion = Countly.SdkVersion,
                 BeginSession = "1",
                 Metrics = new Metrics(),
-                TimeStamp = TimeHelper.ToUnixTime().ToString(),
             };
         }
 
@@ -23,7 +22,6 @@ namespace CountlySDK.Entities
             {
                 EndSession = "1",
                 Duration = (int)DateTime.UtcNow.Subtract(startTime).TotalSeconds,
-                TimeStamp = TimeHelper.ToUnixTime().ToString(),
             };
         }
 
@@ -32,26 +30,12 @@ namespace CountlySDK.Entities
             return new CountlyRequest
             {
                 EndSession = "1",
-                TimeStamp = TimeHelper.ToUnixTime().ToString(),
             };
         }
 
-        public static CountlyRequest CreateEvent(CountlyEvent countlyEvent)
+        public CountlyRequest()
         {
-            return new CountlyRequest
-            {
-                Events = new[] { countlyEvent },
-                TimeStamp = TimeHelper.ToUnixTime().ToString(),
-            };
-        }
-
-        public static CountlyRequest CreateException(ExceptionEvent exception)
-        {
-            return new CountlyRequest
-            {
-                Exception = exception,
-                TimeStamp = TimeHelper.ToUnixTime().ToString(),
-            };
+            TimeStamp = TimeHelper.ToUnixTime().ToString();
         }
 
         [DataMember(Name = "sdk_version", EmitDefaultValue = false)]
