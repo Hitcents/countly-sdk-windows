@@ -52,12 +52,9 @@ namespace CountlySDK
         private const int updateInterval = 60;
 
         // Server url provided by a user
-        private static string ServerUrl;
+        internal static string ServerUrl;
         // Application key provided by a user
-        private static string AppKey;
-
-        // Indicates sync process with a server
-        private static bool uploadInProgress;
+        internal static string AppKey;
 
         private const string DebugLabel = "Count.ly: ";
         private const string ViewEvent = "[CLY]_view";
@@ -67,12 +64,6 @@ namespace CountlySDK
 
         // Events queue
         private static List<CountlyEvent> Events { get; set; } = new List<CountlyEvent>(0);
-
-        // Session queue
-        private static List<SessionEvent> Sessions { get; set; } = new List<SessionEvent>(0);
-
-        // Exceptions queue
-        private static List<ExceptionEvent> Exceptions { get; set; } = new List<ExceptionEvent>(0);
 
         // User details info
         public static CountlyUserDetails UserDetails { get; set; } = new CountlyUserDetails();
@@ -135,8 +126,6 @@ namespace CountlySDK
             AppKey = appKey;
 
             Events.Clear();
-            Sessions.Clear();
-            Exceptions.Clear();
             UserDetails = new CountlyUserDetails();
              
             startTime = DateTime.UtcNow;
@@ -151,28 +140,26 @@ namespace CountlySDK
             Timer.Start();
 #endif
 
-            AddSessionEvent(new BeginSession(AppKey, Device.DeviceId, sdkVersion));
-
             var view = lastView;
             if (view != null)
             {
                 view.Time = DateTime.UtcNow;
-
-                var evt = new CountlyEvent(ViewEvent, 1, 0, null, view.Segmentation);
-                await AddEvent(evt);
+                AddEvent(new CountlyEvent(ViewEvent, 1, 0, null, view.Segmentation));
             }
+
+            await Upload(new BeginSession(sdkVersion));
         }
 
         /// <summary>
         /// Sends session duration. Called automatically each <updateInterval> seconds
         /// </summary>
 #if PCL
-        private static void UpdateSession(object state)
+        private static async void UpdateSession(object state)
 #else
-        private static void UpdateSession(object sender, object e)
+        private static async void UpdateSession(object sender, object e)
 #endif
         {
-            AddSessionEvent(new UpdateSession(AppKey, Device.DeviceId, (int)DateTime.UtcNow.Subtract(startTime).TotalSeconds));
+            await Upload(new UpdateSession((int)DateTime.UtcNow.Subtract(startTime).TotalSeconds));
         }
 
         /// <summary>
@@ -191,91 +178,8 @@ namespace CountlySDK
 #endif
                 Timer = null;
             }
-
-            AddSessionEvent(new EndSession(AppKey, Device.DeviceId));
-            await Upload();
-        }
-
-        /// <summary>
-        ///  Adds session event to queue and uploads
-        /// </summary>
-        /// <param name="sessionEvent">session event object</param>
-        private static void AddSessionEvent(SessionEvent sessionEvent)
-        {
-            if (String.IsNullOrWhiteSpace(ServerUrl))
-            {
-                throw new InvalidOperationException("session is not active");
-            }
-
-            lock (sync)
-            {
-                Sessions.Add(sessionEvent);
-            }
-        }
-
-        /// <summary>
-        /// Uploads sessions queue to Countly server
-        /// </summary>
-        private static async Task<bool> UploadSessions()
-        {
-            lock (sync)
-            {
-                if (uploadInProgress) return true;
-
-                uploadInProgress = true;
-            }
-
-            SessionEvent sessionEvent = null;
-
-            lock (sync)
-            {
-                if (Sessions.Count > 0)
-                {
-                    sessionEvent = Sessions[0];
-                }
-            }
-
-            if (sessionEvent != null)
-            {
-                ResultResponse resultResponse = await Api.SendSession(ServerUrl, sessionEvent, (UserDetails.isChanged) ? UserDetails : null);
-
-                if (resultResponse != null && resultResponse.IsSuccess)
-                {
-                    UserDetails.isChanged = false;
-
-                    lock (sync)
-                    {
-                        uploadInProgress = false;
-
-                        try
-                        {
-                            Sessions.RemoveAt(0);
-                        }
-                        catch { }
-                    }
-
-                    if (Sessions.Count > 0)
-                    {
-                        return await UploadSessions();
-                    }
-                    else
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    uploadInProgress = false;
-
-                    return false;
-                }
-            }
-            else
-            {
-                uploadInProgress = false;
-
-                return true;
-            }
+            
+            await Upload(new EndSession());
         }
 
         /// <summary>
@@ -320,99 +224,26 @@ namespace CountlySDK
                 }
 
                 Events.Clear();
-                Sessions.Clear();
-                Exceptions.Clear();
                 breadcrumb = String.Empty;
                 UserDetails = new CountlyUserDetails();
             }
         }
 
         /// <summary>
-        /// Records a custom event with no segmentation values, a count of one and a sum of zero
-        /// </summary>
-        /// <param name="Key">Name of the custom event, required, must not be the empty string</param>
-        /// <returns>True if event is uploaded successfully, False - queued for delayed upload</returns>
-        public static Task<bool> RecordEvent(string Key)
-        {
-            return RecordCountlyEvent(Key, 1, null, null, null);
-        }
-
-        /// <summary>
-        /// Records a custom event with no segmentation values, the specified count, and a sum of zero.
-        /// </summary>
-        /// <param name="Key">Name of the custom event, required, must not be the empty string</param>
-        /// <param name="Count">Count to associate with the event, should be more than zero</param>
-        /// <returns>True if event is uploaded successfully, False - queued for delayed upload</returns>
-        public static Task<bool> RecordEvent(string Key, int Count)
-        {
-            return RecordCountlyEvent(Key, Count, null, null, null);
-        }
-
-        /// <summary>
-        /// Records a custom event with no segmentation values, and the specified count and sum.
-        /// </summary>
-        /// <param name="Key">Name of the custom event, required, must not be the empty string</param>
-        /// <param name="Count">Count to associate with the event, should be more than zero</param>
-        /// <param name="Sum">Sum to associate with the event</param>
-        /// <returns>True if event is uploaded successfully, False - queued for delayed upload</returns>
-        public static Task<bool> RecordEvent(string Key, int Count, double Sum)
-        {
-            return RecordCountlyEvent(Key, Count, Sum, null, null);
-        }
-
-        /// <summary>
-        /// Records a custom event with the specified segmentation values and count, and a sum of zero.
-        /// </summary>
-        /// <param name="Key">Name of the custom event, required, must not be the empty string</param>
-        /// <param name="Count">Count to associate with the event, should be more than zero</param>
-        /// <param name="Segmentation">Segmentation object to associate with the event, can be null</param>
-        /// <returns>True if event is uploaded successfully, False - queued for delayed upload</returns>
-        public static Task<bool> RecordEvent(string Key, int Count, Segmentation Segmentation)
-        {
-            return RecordCountlyEvent(Key, Count, null, null, Segmentation);
-        }
-
-        /// <summary>
-        /// Records a custom event with the specified segmentation values, count and a sum
-        /// </summary>
-        /// <param name="Key">Name of the custom event, required, must not be the empty string</param>
-        /// <param name="Count">Count to associate with the event, should be more than zero</param>
-        /// <param name="Sum">Sum to associate with the event</param>
-        /// <param name="Segmentation">Segmentation object to associate with the event, can be null</param>
-        /// <returns>True if event is uploaded successfully, False - queued for delayed upload</returns>
-        public static Task<bool> RecordEvent(string Key, int Count, double Sum, Segmentation Segmentation)
-        {
-            return RecordCountlyEvent(Key, Count, Sum, null, Segmentation);
-        }
-
-        /// <summary>
-        /// Records a custom event with the specified segmentation values, count, a sum, and a Dur
-        /// </summary>
-        /// <param name="Key">Name of the custom event, required, must not be the empty string</param>
-        /// <param name="Count">Count to associate with the event, should be more than zero</param>
-        /// <param name="Sum">Sum to associate with the event</param>
-        /// <param name="Dur">Dur parameter, I have no idea guys</param>
-        /// <param name="Segmentation">Segmentation object to associate with the event, can be null</param>
-        /// <returns>True if event is uploaded successfully, False - queued for delayed upload</returns>
-        public static Task<bool> RecordEvent(string Key, int Count, double Sum, double Dur, Segmentation Segmentation)
-        {
-            return RecordCountlyEvent(Key, Count, Sum, Dur, Segmentation);
-        }
-
-        /// <summary>
         /// Records a custom event with the specified values
         /// </summary>
-        /// <param name="Key">Name of the custom event, required, must not be the empty string</param>
-        /// <param name="Count">Count to associate with the event, should be more than zero</param>
-        /// <param name="Sum">Sum to associate with the event</param>
-        /// <param name="Segmentation">Segmentation object to associate with the event, can be null</param>
+        /// <param name="key">Name of the custom event, required, must not be the empty string</param>
+        /// <param name="count">Count to associate with the event, should be more than zero</param>
+        /// <param name="sum">Sum to associate with the event</param>
+        /// <param name="duration">Duration to associate with the event</param>
+        /// <param name="segmentation">Segmentation object to associate with the event, can be null</param>
         /// <returns>True if event is uploaded successfully, False - queued for delayed upload</returns>
-        private static Task<bool> RecordCountlyEvent(string Key, int Count, double? Sum, double? Dur, Segmentation Segmentation)
+        public static void RecordEvent(string key, int count = 1, double? sum = null, double? duration = null, Segmentation segmentation = null)
         {
-            return AddEvent(new CountlyEvent(Key, Count, Sum, Dur, Segmentation));
+            AddEvent(new CountlyEvent(key, count, sum, duration, segmentation));
         }
 
-        public static Task<bool> RecordView(string name, Segmentation segmentation)
+        public static void RecordView(string name, Segmentation segmentation)
         {
             if (segmentation == null)
                 segmentation = new Segmentation();
@@ -433,131 +264,22 @@ namespace CountlySDK
                 evt = new CountlyEvent(ViewEvent, 1, 0, Math.Round((DateTime.UtcNow - view.Time).TotalSeconds, 2), segmentation);
             }
             lastView = new View { Name = name, Time = DateTime.UtcNow, Segmentation = segmentation };
-            return AddEvent(evt);
+            AddEvent(evt);
         }
 
         /// <summary>
-        /// Adds event to queue and uploads
+        /// Adds event to queue
         /// </summary>
         /// <param name="countlyEvent">event object</param>
-        /// <returns>True if success</returns>
-        private async static Task<bool> AddEvent(CountlyEvent countlyEvent)
+        private static void AddEvent(CountlyEvent countlyEvent)
         {
-            if (String.IsNullOrWhiteSpace(ServerUrl))
+            if (string.IsNullOrWhiteSpace(ServerUrl))
             {
                 throw new InvalidOperationException("session is not active");
             }
             lock (sync)
             {
                 Events.Add(countlyEvent);
-            }
-
-            return await Upload();
-        }
-
-        /// <summary>
-        /// Uploads event queue to Countly server
-        /// </summary>
-        /// <returns>True if success</returns>
-        private static async Task<bool> UploadEvents()
-        {
-            lock (sync)
-            {
-                // Allow uploading in one thread only
-                if (uploadInProgress) return true;
-
-                uploadInProgress = true;
-            }
-
-            int eventsCount;
-
-            lock (sync)
-            {
-                eventsCount = Events.Count;
-            }
-
-            if (eventsCount > 0)
-            {
-                ResultResponse resultResponse = await Api.SendEvents(ServerUrl, AppKey, Device.DeviceId, Events.Take(eventsCount).ToList(), (UserDetails.isChanged) ? UserDetails : null);
-
-                if (resultResponse != null && resultResponse.IsSuccess)
-                {
-                    int eventsCountToUploadAgain = 0;
-
-                    UserDetails.isChanged = false;
-
-                    lock (sync)
-                    {
-                        uploadInProgress = false;
-
-                        try
-                        {
-                            for (int i = eventsCount - 1; i >= 0; i--)
-                            {
-                                Events.RemoveAt(i);
-                            }
-                        }
-                        catch { }
-
-                        eventsCountToUploadAgain = Events.Count;
-                    }
-
-                    if (eventsCountToUploadAgain > 0)
-                    {
-                        // Upload events added during sync
-                        return await UploadEvents();
-                    }
-                    else
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    uploadInProgress = false;
-
-                    return false;
-                }
-            }
-            else
-            {
-                uploadInProgress = false;
-
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// Raised when user details propery is changed
-        /// </summary>
-        private static async void OnUserDetailsChanged()
-        {
-            UserDetails.isChanged = true;
-            
-            await UploadUserDetails();
-        }
-
-        /// <summary>
-        /// Uploads user details
-        /// </summary>
-        /// <returns>true if details are successfully uploaded, false otherwise</returns>
-        internal static async Task<bool> UploadUserDetails()
-        {
-            if (String.IsNullOrWhiteSpace(Countly.ServerUrl))
-            {
-                throw new InvalidOperationException("session is not active");
-            }
-
-            ResultResponse resultResponse = await Api.UploadUserDetails(Countly.ServerUrl, Countly.AppKey, Device.DeviceId, UserDetails);
-
-            if (resultResponse != null && resultResponse.IsSuccess)
-            {
-                UserDetails.isChanged = false;
-                return true;
-            }
-            else
-            {
-                return false;
             }
         }
 
@@ -566,9 +288,9 @@ namespace CountlySDK
         /// </summary>
         /// <param name="error">exception title</param>
         /// <returns>True if exception successfully uploaded, False - queued for delayed upload</returns>
-        public static async Task<bool> RecordException(string error)
+        public static Task<bool> RecordException(string error)
         {
-            return await RecordException(error, null, null);
+            return RecordException(error, null, null);
         }
 
         /// <summary>
@@ -577,9 +299,9 @@ namespace CountlySDK
         /// <param name="error">exception title</param>
         /// <param name="stackTrace">exception stacktrace</param>
         /// <returns>True if exception successfully uploaded, False - queued for delayed upload</returns>
-        public static async Task<bool> RecordException(string error, string stackTrace)
+        public static Task<bool> RecordException(string error, string stackTrace)
         {
-            return await RecordException(error, stackTrace, null);
+            return RecordException(error, stackTrace, null);
         }
 
         /// <summary>
@@ -587,9 +309,9 @@ namespace CountlySDK
         /// </summary>
         /// <param name="error">exception title</param>
         /// <param name="stackTrace">exception stacktrace</param>
-        private static async Task RecordUnhandledException(string error, string stackTrace)
+        private static Task<bool> RecordUnhandledException(string error, string stackTrace)
         {
-            await RecordException(error, stackTrace, null, true);
+            return RecordException(error, stackTrace, null, true);
         }
 
         /// <summary>
@@ -599,9 +321,9 @@ namespace CountlySDK
         /// <param name="stackTrace">exception stacktrace</param>
         /// <param name="customInfo">exception custom info</param>
         /// <returns>True if exception successfully uploaded, False - queued for delayed upload</returns>
-        public static async Task<bool> RecordException(string error, string stackTrace, Dictionary<string, string> customInfo)
+        public static Task<bool> RecordException(string error, string stackTrace, Dictionary<string, string> customInfo)
         {
-            return await RecordException(error, stackTrace, customInfo, false);
+            return RecordException(error, stackTrace, customInfo, false);
         }
 
         /// <summary>
@@ -614,87 +336,7 @@ namespace CountlySDK
         /// <returns>True if exception successfully uploaded, False - queued for delayed upload</returns>
         private static Task<bool> RecordException(string error, string stackTrace, Dictionary<string, string> customInfo, bool unhandled)
         {
-            if (String.IsNullOrWhiteSpace(ServerUrl))
-            {
-                throw new InvalidOperationException("session is not active");
-            }
-
-            TimeSpan run = DateTime.UtcNow.Subtract(startTime);
-
-            lock (sync)
-            {
-                Exceptions.Add(new ExceptionEvent(error, stackTrace, unhandled, breadcrumb, run, customInfo));
-            }
-
-            //NOTE: I don't think we need to auto-upload
-            return Task.FromResult(true);
-        }
-
-        /// <summary>
-        /// Uploads exceptions queue to Countly server
-        /// </summary>
-        /// <returns>True if success</returns>
-        private static async Task<bool> UploadExceptions()
-        {
-            lock (sync)
-            {
-                // Allow uploading in one thread only
-                if (uploadInProgress) return true;
-
-                uploadInProgress = true;
-            }
-
-            int exceptionsCount;
-
-            lock (sync)
-            {
-                exceptionsCount = Exceptions.Count;
-            }
-
-            if (exceptionsCount > 0)
-            {
-                ResultResponse resultResponse = await Api.SendException(ServerUrl, AppKey, Device.DeviceId, Exceptions[0]);
-
-                if (resultResponse != null && resultResponse.IsSuccess)
-                {
-                    int exceptionsCountToUploadAgain = 0;
-
-                    lock (sync)
-                    {
-                        uploadInProgress = false;
-
-                        try
-                        {
-                            Exceptions.RemoveAt(0);
-                        }
-                        catch { }
-
-                        exceptionsCountToUploadAgain = Exceptions.Count;
-                    }
-
-                    if (exceptionsCountToUploadAgain > 0)
-                    {
-                        // Upload next exception
-                        return await UploadExceptions();
-                    }
-                    else
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    uploadInProgress = false;
-
-                    return false;
-                }
-            }
-            else
-            {
-                uploadInProgress = false;
-
-                return false;
-            }
+            return Upload(exception: new ExceptionEvent(error, stackTrace, unhandled, breadcrumb, DateTime.UtcNow.Subtract(startTime), customInfo));
         }
 
         /// <summary>
@@ -710,21 +352,38 @@ namespace CountlySDK
         /// Upload sessions, events & exception queues
         /// </summary>
         /// <returns>True if success</returns>
-        public static async Task<bool> Upload()
+        public static Task<bool> Upload()
         {
-            bool success = await UploadSessions();
+            return Upload(null, null);
+        } 
 
-            if (success)
+        private static async Task<bool> Upload(SessionEvent sessionEvent = null, ExceptionEvent exception = null)
+        {
+            if (string.IsNullOrWhiteSpace(ServerUrl))
             {
-                success = await UploadEvents();
+                throw new InvalidOperationException("session is not active");
             }
 
-            if (success)
+            var request = new CountlyRequest
             {
-                success = await UploadExceptions();
+                SessionEvent = sessionEvent,
+                Exception = exception,
+            };
+
+            lock(sync)
+            {
+                request.Events = new List<CountlyEvent>(Events);
+                Events.Clear();
+
+                if (UserDetails.isChanged)
+                {
+                    request.UserDetails = UserDetails;
+                    UserDetails.isChanged = false;
+                }
             }
 
-            return success;
+            var response = await Api.Call<ResultResponse>(ServerUrl, request);
+            return response.IsSuccess;
         }
 
         internal static void Log(string message)

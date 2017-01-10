@@ -17,42 +17,7 @@ namespace CountlySDK
 
         private static readonly HttpClient _httpClient = new HttpClient();
 
-        public static async Task<ResultResponse> SendSession(string serverUrl, SessionEvent sessionEvent, CountlyUserDetails userDetails = null)
-        {
-            return await Call<ResultResponse>(serverUrl, new CountlyRequest
-            {
-                SessionEvent = sessionEvent,
-                UserDetails = userDetails,
-            });
-        }
-
-        public static Task<ResultResponse> SendEvents(string serverUrl, string appKey, string deviceId, List<CountlyEvent> events, CountlyUserDetails userDetails = null)
-        {
-            return Call<ResultResponse>(serverUrl, new CountlyRequest
-            {
-                AppKey = appKey,
-                DeviceId = deviceId,
-                Events = events,
-                UserDetails = userDetails,
-            });
-        }
-
-        public static async Task<ResultResponse> SendException(string serverUrl, string appKey, string deviceId, ExceptionEvent exception)
-        {
-            return await Call<ResultResponse>(serverUrl, new CountlyRequest
-            {
-                AppKey = appKey,
-                DeviceId = deviceId,
-                Exception = exception,
-            });
-        }
-
-        public static async Task<ResultResponse> UploadUserDetails(string serverUrl, string appKey, string deviceId, CountlyUserDetails userDetails = null)
-        {
-            return await Call<ResultResponse>(serverUrl, new CountlyRequest { UserDetails = userDetails });
-        }
-
-        private static async Task<T> Call<T>(string serverUrl, CountlyRequest request)
+        public static async Task<T> Call<T>(string serverUrl, CountlyRequest request)
         {
             try
             {

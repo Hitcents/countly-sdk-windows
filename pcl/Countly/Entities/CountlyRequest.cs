@@ -15,10 +15,6 @@ namespace CountlySDK.Entities
             public const string Exception = "crash";
         }
 
-        public string AppKey { get; set; }
-
-        public string DeviceId { get; set; }
-
         public SessionEvent SessionEvent { get; set; }
 
         public CountlyUserDetails UserDetails { get; set; }
@@ -31,11 +27,8 @@ namespace CountlySDK.Entities
         {
             var dict = SessionEvent?.Content ?? new Dictionary<string, string>();
 
-            if (!string.IsNullOrEmpty(AppKey))
-                dict[Names.AppKey] = AppKey;
-
-            if (!string.IsNullOrEmpty(DeviceId))
-                dict[Names.DeviceId] = DeviceId;
+            dict[Names.AppKey] = Countly.AppKey;
+            dict[Names.DeviceId] = Device.DeviceId;
 
             if (UserDetails != null)
                 dict[Names.UserDetails] = JsonConvert.SerializeObject(UserDetails, Api.JsonSettings);
