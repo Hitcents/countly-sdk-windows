@@ -19,61 +19,40 @@ namespace CountlySDK
 
         public static async Task<ResultResponse> SendSession(string serverUrl, SessionEvent sessionEvent, CountlyUserDetails userDetails = null)
         {
-            var post = new Dictionary<string, string>(sessionEvent.Content);
-
-            if (userDetails != null)
+            return await Call<ResultResponse>(serverUrl, new CountlyRequest
             {
-                post["user_details"] = JsonConvert.SerializeObject(userDetails, JsonSettings);
-            }
-
-            return await Call<ResultResponse>(serverUrl, post);
+                SessionEvent = sessionEvent,
+                UserDetails = userDetails,
+            });
         }
 
-        public static async Task<ResultResponse> SendEvents(string serverUrl, string appKey, string deviceId, List<CountlyEvent> events, CountlyUserDetails userDetails = null)
+        public static Task<ResultResponse> SendEvents(string serverUrl, string appKey, string deviceId, List<CountlyEvent> events, CountlyUserDetails userDetails = null)
         {
-            var post = CreatePost(appKey, deviceId);
-
-            post["events"] = JsonConvert.SerializeObject(events, JsonSettings);
-
-            if (userDetails != null)
+            return Call<ResultResponse>(serverUrl, new CountlyRequest
             {
-                post["user_details"] = JsonConvert.SerializeObject(userDetails, JsonSettings);
-            }
-
-            return await Call<ResultResponse>(serverUrl, post);
+                AppKey = appKey,
+                DeviceId = deviceId,
+                Events = events,
+                UserDetails = userDetails,
+            });
         }
 
         public static async Task<ResultResponse> SendException(string serverUrl, string appKey, string deviceId, ExceptionEvent exception)
         {
-            var post = CreatePost(appKey, deviceId);
-
-            post["crash"] = JsonConvert.SerializeObject(exception, JsonSettings);
-
-            return await Call<ResultResponse>(serverUrl, post);
+            return await Call<ResultResponse>(serverUrl, new CountlyRequest
+            {
+                AppKey = appKey,
+                DeviceId = deviceId,
+                Exception = exception,
+            });
         }
 
         public static async Task<ResultResponse> UploadUserDetails(string serverUrl, string appKey, string deviceId, CountlyUserDetails userDetails = null)
         {
-            var post = CreatePost(appKey, deviceId);
-
-            if (userDetails != null)
-            {
-                post["user_details"] = JsonConvert.SerializeObject(userDetails, JsonSettings);
-            }
-
-            return await Call<ResultResponse>(serverUrl, post);
+            return await Call<ResultResponse>(serverUrl, new CountlyRequest { UserDetails = userDetails });
         }
 
-        private static Dictionary<string, string> CreatePost(string appKey, string deviceId)
-        {
-            return new Dictionary<string, string>
-            {
-                { "app_key", appKey },
-                { "device_id", deviceId }
-            };
-        }
-
-        private static async Task<T> Call<T>(string serverUrl, Dictionary<string, string> post)
+        private static async Task<T> Call<T>(string serverUrl, CountlyRequest request)
         {
             try
             {
@@ -82,14 +61,9 @@ namespace CountlySDK
                 if (Countly.IsLoggingEnabled)
                 {
                     Countly.Log("POST {0}", address);
-
-                    foreach (var pair in post)
-                    {
-                        Countly.Log("{0}={1}", pair.Key, pair.Value);
-                    }
                 }
 
-                var response = await _httpClient.PostAsync(address, new FormUrlEncodedContent(post));
+                var response = await _httpClient.PostAsync(address, request.ToContent());
                 response.EnsureSuccessStatusCode();
 
                 string json = await response.Content.ReadAsStringAsync();

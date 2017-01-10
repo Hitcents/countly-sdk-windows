@@ -82,6 +82,7 @@
     <Compile Include="..\..\windows\Countly\Server\Responses\ResultResponse.cs">
       <Link>Server\Responses\ResultResponse.cs</Link>
     </Compile>
+    <Compile Include="Entities\CountlyRequest.cs" />
     <Compile Include="Entities\Device.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
