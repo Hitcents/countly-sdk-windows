@@ -37,9 +37,6 @@
     <Compile Include="..\..\windows\Countly\Countly.cs">
       <Link>Countly.cs</Link>
     </Compile>
-    <Compile Include="..\..\windows\Countly\Entities\BeginSession.cs">
-      <Link>Entities\BeginSession.cs</Link>
-    </Compile>
     <Compile Include="..\..\windows\Countly\Entities\CountlyEvent.cs">
       <Link>Entities\CountlyEvent.cs</Link>
     </Compile>
@@ -48,9 +45,6 @@
     </Compile>
     <Compile Include="..\..\windows\Countly\Entities\CustomInfo.cs">
       <Link>Entities\CustomInfo.cs</Link>
-    </Compile>
-    <Compile Include="..\..\windows\Countly\Entities\EndSession.cs">
-      <Link>Entities\EndSession.cs</Link>
     </Compile>
     <Compile Include="..\..\windows\Countly\Entities\ExceptionEvent.cs">
       <Link>Entities\ExceptionEvent.cs</Link>
@@ -63,12 +57,6 @@
     </Compile>
     <Compile Include="..\..\windows\Countly\Entities\SegmentationItem.cs">
       <Link>Entities\SegmentationItem.cs</Link>
-    </Compile>
-    <Compile Include="..\..\windows\Countly\Entities\SessionEvent.cs">
-      <Link>Entities\SessionEvent.cs</Link>
-    </Compile>
-    <Compile Include="..\..\windows\Countly\Entities\UpdateSession.cs">
-      <Link>Entities\UpdateSession.cs</Link>
     </Compile>
     <Compile Include="..\..\windows\Countly\Helpers\PhoneNameHelper.cs">
       <Link>Helpers\PhoneNameHelper.cs</Link>

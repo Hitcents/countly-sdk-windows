@@ -47,7 +47,7 @@ namespace CountlySDK
     public static class Countly
     {
         // Current version of the Count.ly Windows Phone SDK as a displayable string.
-        private const string sdkVersion = "1.0";
+        public const string SdkVersion = "1.0";
 
         // How often update session is sent
         private const int updateInterval = 60;
@@ -64,7 +64,7 @@ namespace CountlySDK
         private static object sync = new object();
 
         // Events queue
-        private static List<CountlyEvent> Events { get; set; } = new List<CountlyEvent>(0);
+        private static List<CountlyRequest> Events { get; set; } = new List<CountlyRequest>();
 
         // User details info
         public static CountlyUserDetails UserDetails { get; set; } = new CountlyUserDetails();
@@ -148,7 +148,7 @@ namespace CountlySDK
                 AddEvent(new CountlyEvent(ViewEvent, 1, 0, null, view.Segmentation));
             }
 
-            await Upload(new BeginSession(sdkVersion));
+            await Upload(CountlyRequest.CreateBeginSession());
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace CountlySDK
         private static async void UpdateSession(object sender, object e)
 #endif
         {
-            await Upload(new UpdateSession((int)DateTime.UtcNow.Subtract(startTime).TotalSeconds));
+            await Upload();
         }
 
         /// <summary>
@@ -180,7 +180,7 @@ namespace CountlySDK
                 Timer = null;
             }
             
-            await Upload(new EndSession());
+            await Upload(CountlyRequest.CreateEndSession());
         }
 
         /// <summary>
@@ -280,7 +280,9 @@ namespace CountlySDK
             }
             lock (sync)
             {
-                Events.Add(countlyEvent);
+                var request = CountlyRequest.CreateEvent(countlyEvent);
+
+                Events.Add(request);
             }
         }
 
@@ -294,7 +296,7 @@ namespace CountlySDK
         /// <returns>True if exception successfully uploaded, False - queued for delayed upload</returns>
         public static Task<bool> RecordException(string error, string stackTrace, Dictionary<string, string> customInfo = null, bool unhandled = false)
         {
-            return Upload(exception: new ExceptionEvent(error, stackTrace, unhandled, breadCrumb, DateTime.UtcNow.Subtract(startTime), customInfo));
+            return Upload(CountlyRequest.CreateException(new ExceptionEvent(error, stackTrace, unhandled, breadCrumb, DateTime.UtcNow.Subtract(startTime), customInfo)));
         }
 
         /// <summary>
@@ -312,35 +314,33 @@ namespace CountlySDK
         /// <returns>True if success</returns>
         public static Task<bool> Upload()
         {
-            return Upload(null, null);
+            return Upload(CountlyRequest.CreateUpdateSession(startTime));
         } 
 
-        private static async Task<bool> Upload(SessionEvent sessionEvent = null, ExceptionEvent exception = null)
+        private static async Task<bool> Upload(CountlyRequest request)
         {
             if (string.IsNullOrWhiteSpace(ServerUrl))
             {
                 throw new InvalidOperationException("session is not active");
             }
 
-            var request = new CountlyRequest
-            {
-                SessionEvent = sessionEvent,
-                Exception = exception,
-            };
+            var requests = new List<CountlyRequest>();
 
             lock(sync)
             {
-                request.Events = new List<CountlyEvent>(Events);
-                Events.Clear();
-
                 if (UserDetails.isChanged)
                 {
                     request.UserDetails = UserDetails;
                     UserDetails.isChanged = false;
                 }
+
+                requests.AddRange(Events);
+                Events.Clear();
             }
 
-            var response = await Api.Call<ResultResponse>(ServerUrl, request);
+            requests.Add(request);
+
+            var response = await Api.Call<ResultResponse>(ServerUrl, requests);
             return response.IsSuccess;
         }
 

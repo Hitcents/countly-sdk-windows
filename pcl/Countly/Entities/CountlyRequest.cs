@@ -1,45 +1,84 @@
-﻿using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.Net.Http;
+﻿using CountlySDK.Helpers;
+using System;
+using System.Runtime.Serialization;
 
 namespace CountlySDK.Entities
 {
     internal class CountlyRequest
     {
-        private class Names
+        public static CountlyRequest CreateBeginSession()
         {
-            public const string AppKey = "app_key";
-            public const string DeviceId = "device_id";
-            public const string UserDetails = "user_details";
-            public const string Events = "events";
-            public const string Exception = "crash";
+            return new CountlyRequest
+            {
+                SdkVersion = Countly.SdkVersion,
+                BeginSession = "1",
+                Metrics = new Metrics(),
+                TimeStamp = TimeHelper.ToUnixTime().ToString(),
+            };
         }
 
-        public SessionEvent SessionEvent { get; set; }
+        public static CountlyRequest CreateUpdateSession(DateTime startTime)
+        {
+            return new CountlyRequest
+            {
+                EndSession = "1",
+                Duration = (int)DateTime.UtcNow.Subtract(startTime).TotalSeconds,
+                TimeStamp = TimeHelper.ToUnixTime().ToString(),
+            };
+        }
 
+        public static CountlyRequest CreateEndSession()
+        {
+            return new CountlyRequest
+            {
+                EndSession = "1",
+                TimeStamp = TimeHelper.ToUnixTime().ToString(),
+            };
+        }
+
+        public static CountlyRequest CreateEvent(CountlyEvent countlyEvent)
+        {
+            return new CountlyRequest
+            {
+                Events = new[] { countlyEvent },
+                TimeStamp = TimeHelper.ToUnixTime().ToString(),
+            };
+        }
+
+        public static CountlyRequest CreateException(ExceptionEvent exception)
+        {
+            return new CountlyRequest
+            {
+                Exception = exception,
+                TimeStamp = TimeHelper.ToUnixTime().ToString(),
+            };
+        }
+
+        [DataMember(Name = "sdk_version", EmitDefaultValue = false)]
+        public string SdkVersion { get; set; }
+
+        [DataMember(Name = "begin_session", EmitDefaultValue = false)]
+        public string BeginSession { get; set; }
+
+        [DataMember(Name = "session_duration", EmitDefaultValue = false)]
+        public int Duration { get; set; }
+
+        [DataMember(Name = "end_session", EmitDefaultValue = false)]
+        public string EndSession { get; set; }
+
+        [DataMember(Name = "timestamp", EmitDefaultValue = false)]
+        public string TimeStamp { get; set; }
+
+        [DataMember(Name = "user_details", EmitDefaultValue = false)]
         public CountlyUserDetails UserDetails { get; set; }
 
-        public List<CountlyEvent> Events { get; set; }
+        [DataMember(Name = "metrics", EmitDefaultValue = false)]
+        public Metrics Metrics { get; set; }
 
+        [DataMember(Name = "events", EmitDefaultValue = false)]
+        public CountlyEvent[] Events { get; set; }
+
+        [DataMember(Name = "crash", EmitDefaultValue = false)]
         public ExceptionEvent Exception { get; set; }
-
-        public Dictionary<string, string> ToContent()
-        {
-            var dict = SessionEvent?.Content ?? new Dictionary<string, string>();
-
-            dict[Names.AppKey] = Countly.AppKey;
-            dict[Names.DeviceId] = Device.DeviceId;
-
-            if (UserDetails != null)
-                dict[Names.UserDetails] = JsonConvert.SerializeObject(UserDetails, Api.JsonSettings);
-
-            if (Events != null && Events.Count > 0)
-                dict[Names.Events] = JsonConvert.SerializeObject(Events, Api.JsonSettings);
-
-            if (Exception != null)
-                dict[Names.Exception] = JsonConvert.SerializeObject(Exception, Api.JsonSettings);
-
-            return dict;
-        }
     }
 }
