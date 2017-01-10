@@ -12,6 +12,7 @@ namespace CountlyTests
         private const string Server = "https://try.count.ly";
         private const string ApiKey = "<your-key-here>";
         private const string DeviceId = "39A9B658F49D474BB565DA868C54A6DF";
+        private const string UserName = "Donald Trump";
 
         [SetUp]
         public void SetUp()
@@ -42,7 +43,7 @@ namespace CountlyTests
         public async Task RecordEvent()
         {
             await Countly.StartSession(Server, ApiKey);
-            Countly.UserDetails.Name = "unit-test";
+            Countly.UserDetails.Name = UserName;
 
             var segmentation = new Segmentation();
             segmentation.Add("test", new Random().Next(10).ToString());
@@ -55,7 +56,7 @@ namespace CountlyTests
         public async Task SendException()
         {
             await Countly.StartSession(Server, ApiKey);
-            Countly.UserDetails.Name = "unit-test";
+            Countly.UserDetails.Name = UserName;
 
             await Countly.RecordException("Oh no!", "this is a trace\nmorelines\n");
 
@@ -65,10 +66,10 @@ namespace CountlyTests
         [Test]
         public async Task SendViews()
         {
-            await Countly.StartSession(Server, ApiKey);
-            Countly.UserDetails.Name = "unit-test";
+            Countly.UserDetails.Name = UserName;
             Countly.UserDetails.Custom["Level"] = "1";
             Countly.UserDetails.Custom["Team"] = "Warriors";
+            await Countly.StartSession(Server, ApiKey);
 
             Countly.RecordView("ScreenA", MakeSegment());
             await Task.Delay(3500);
@@ -86,7 +87,7 @@ namespace CountlyTests
         public async Task SendViewsWithStartEnd()
         {
             await Countly.StartSession(Server, ApiKey);
-            Countly.UserDetails.Name = "unit-test";
+            Countly.UserDetails.Name = UserName;
 
             Countly.RecordView("ScreenA", MakeSegment());
             await Task.Delay(3500);
@@ -107,7 +108,7 @@ namespace CountlyTests
         public async Task SendAction()
         {
             await Countly.StartSession(Server, ApiKey);
-            Countly.UserDetails.Name = "unit-test";
+            Countly.UserDetails.Name = UserName;
 
             Countly.RecordView("ScreenA", MakeSegment());
 
@@ -125,14 +126,19 @@ namespace CountlyTests
         [Test]
         public async Task SendBunchOfEvents()
         {
+            Countly.UserDetails.Name = UserName;
             await Countly.StartSession(Server, ApiKey);
-            Countly.UserDetails.Name = "unit-test";
 
-            Countly.RecordEvent("ScreenA", segmentation: MakeSegment());
-            Countly.RecordEvent("ScreenB", segmentation: MakeSegment());
-            Countly.RecordEvent("ScreenC", segmentation: MakeSegment());
-            Countly.RecordEvent("ScreenD", segmentation: MakeSegment());
-            Countly.RecordEvent("ScreenE", segmentation: MakeSegment());
+            Countly.RecordEvent("ActionA", segmentation: MakeSegment());
+            await Task.Delay(25);
+            Countly.RecordEvent("ActionB", segmentation: MakeSegment());
+            await Task.Delay(25);
+            Countly.RecordEvent("ActionC", segmentation: MakeSegment());
+            await Task.Delay(2100);
+            Countly.RecordEvent("ActionD", segmentation: MakeSegment());
+            await Task.Delay(25);
+            Countly.RecordEvent("ActionE", segmentation: MakeSegment());
+            await Task.Delay(1000);
 
             await Countly.EndSession();
         }
