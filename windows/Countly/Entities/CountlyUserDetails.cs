@@ -20,15 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 
 namespace CountlySDK.Entities
 {
@@ -38,19 +31,12 @@ namespace CountlySDK.Entities
     [DataContractAttribute]
     public class CountlyUserDetails
     {
-        internal delegate void UserDetailsChangedEventHandler();
-
-        /// <summary>
-        /// raised when any of properties are changed
-        /// </summary>
-        internal event UserDetailsChangedEventHandler UserDetailsChanged;
-
         private string name;
+
         /// <summary>
         /// Name
         /// </summary>
-        [JsonProperty("name")]
-        [DataMemberAttribute]
+        [DataMember(Name = "name", EmitDefaultValue = false)]
         public string Name
         {
             get
@@ -69,11 +55,11 @@ namespace CountlySDK.Entities
         }
 
         private string username;
+
         /// <summary>
         /// Username or login info
         /// </summary>
-        [JsonProperty("username")]
-        [DataMemberAttribute]
+        [DataMember(Name = "username", EmitDefaultValue = false)]
         public string Username
         {
             get
@@ -92,11 +78,11 @@ namespace CountlySDK.Entities
         }
 
         private string email;
+
         /// <summary>
         /// User email address
         /// </summary>
-        [JsonProperty("email")]
-        [DataMemberAttribute]
+        [DataMember(Name = "email", EmitDefaultValue = false)]
         public string Email
         {
             get
@@ -115,11 +101,11 @@ namespace CountlySDK.Entities
         }
 
         private string organization;
+
         /// <summary>
         /// User organization
         /// </summary>
-        [JsonProperty("organization")]
-        [DataMemberAttribute]
+        [DataMember(Name = "organization", EmitDefaultValue = false)]
         public string Organization
         {
             get
@@ -138,11 +124,11 @@ namespace CountlySDK.Entities
         }
 
         private string phone;
+
         /// <summary>
         /// User phone
         /// </summary>
-        [JsonProperty("phone")]
-        [DataMemberAttribute]
+        [DataMember(Name = "phone", EmitDefaultValue = false)]
         public string Phone
         {
             get
@@ -161,11 +147,11 @@ namespace CountlySDK.Entities
         }
 
         private string picture;
+
         /// <summary>
         /// Web URL to picture
         /// </summary>
-        [JsonProperty("picture")]
-        [DataMemberAttribute]
+        [DataMember(Name = "picture", EmitDefaultValue = false)]
         public string Picture
         {
             get
@@ -184,11 +170,11 @@ namespace CountlySDK.Entities
         }
 
         private string gender;
+
         /// <summary>
         /// User gender
         /// </summary>
-        [JsonProperty("gender")]
-        [DataMemberAttribute]
+        [DataMember(Name = "gender", EmitDefaultValue = false)]
         public string Gender
         {
             get
@@ -207,11 +193,11 @@ namespace CountlySDK.Entities
         }
 
         private int? birthYear;
+
         /// <summary>
         /// User birth year
         /// </summary>
-        [JsonProperty("byear")]
-        [DataMemberAttribute]
+        [DataMember(Name = "byear", EmitDefaultValue = false)]
         public int? BirthYear
         {
             get
@@ -230,11 +216,11 @@ namespace CountlySDK.Entities
         }
 
         private CustomInfo custom;
+
         /// <summary>
         /// User custom data
         /// </summary>
-        [JsonIgnore]        
-        [DataMemberAttribute]        
+        [IgnoreDataMember]
         public CustomInfo Custom
         {
             get
@@ -269,61 +255,30 @@ namespace CountlySDK.Entities
         /// <summary>
         /// Custom data ready for json serializer
         /// </summary>
-        [JsonProperty("custom")]
+        [DataMember(Name = "custom", EmitDefaultValue = false)]
         private Dictionary<string, string> _custom
         {
             get
             {
-                return Custom.Items;
+                if (Custom?.Items?.Count > 0)
+                    return Custom.Items;
+
+                return null;
             }
         }
 
-        private
-            #if !PCL
-            async 
-            #endif
-            void NotifyDetailsChanged()
+        private void NotifyDetailsChanged()
         {
-            if (UserDetailsChanged != null)
-            {
-                isNotified = false;
-
-#if !PCL
-                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                () =>
-                {
-#endif
-                    if (!isNotified)
-                    {
-                        isNotified = true;
-
-                        UserDetailsChanged();
-                    }
-#if !PCL
-                });
-#endif
-            }
+            //NOTE: leaving this method for now if we need to put the event back
+            HasChanges = true;
         }
 
-        [JsonIgnore]
-        [DataMemberAttribute]
-        internal bool isChanged { get; set; }
-
-        [JsonIgnore]
-        internal bool isNotified { get; set; }
+        [IgnoreDataMember]
+        internal bool HasChanges { get; set; }
 
         public CountlyUserDetails()
         {
             Custom = new CustomInfo();
-        }
-
-        /// <summary>
-        /// Serializes object into json
-        /// </summary>
-        /// <returns>json representation string</returns>
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
         }
     }
 }

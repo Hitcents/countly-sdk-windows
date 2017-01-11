@@ -127,22 +127,5 @@ namespace CountlySDK.Entities
         {
             get { return OrientationCallback?.Invoke(); }
         }
-
-        /// <summary>
-        /// Set this callback to provide online logic
-        /// </summary>
-        public static Func<bool> OnlineCallback
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Returns current device connection to the internet
-        /// </summary>
-        public static bool Online
-        {
-            get { return OnlineCallback?.Invoke() ?? true; }
-        }
     }
 }

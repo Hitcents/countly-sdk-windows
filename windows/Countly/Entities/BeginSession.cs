@@ -33,15 +33,10 @@ namespace CountlySDK.Entities
         /// <summary>
         /// Creates BeginSession object with provided values
         /// </summary>
-        /// <param name="appKey">App key for the application being tracked; find in the Countly Dashboard under Management > Applications</param>
-        /// <param name="deviceId">Unique ID for the device the app is running on</param>
         /// <param name="sdkVersion">SDK version string</param>
-        /// <param name="metrics">Metrics parameters</param>
-        public BeginSession(string appKey, string deviceId, string sdkVersion)
+        public BeginSession(string sdkVersion)
         {
             var metrics = new Metrics();
-            Content["app_key"] = appKey;
-            Content["device_id"] = deviceId;
             Content["sdk_version"] = sdkVersion;
             Content["begin_session"] = "1";
             Content["metrics"] = metrics.ToString();

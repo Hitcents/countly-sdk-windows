@@ -20,135 +20,73 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace CountlySDK.Entities
 {
     /// <summary>
     /// This class holds the data about an application exception
     /// </summary>
-    [DataContractAttribute]
+    [DataContract]
     internal class ExceptionEvent
     {
         //device metrics
 
-        [DataMemberAttribute]
-        [JsonProperty("_os")]
+        [DataMember(Name = "_os", EmitDefaultValue = true)]
         public string OS { get; set; }
 
-        [DataMemberAttribute]
-        [JsonProperty("_os_version")]
+        [DataMember(Name = "_os_version", EmitDefaultValue = true)]
         public string OSVersion { get; set; }
 
-        [DataMemberAttribute]
-        [JsonProperty("_manufacture")]
+        [DataMember(Name = "_manufacture", EmitDefaultValue = true)]
         public string Manufacture { get; set; }
 
-        [DataMemberAttribute]
-        [JsonProperty("_device")]
+        [DataMember(Name = "_device", EmitDefaultValue = true)]
         public string Device { get; set; }
 
-        [DataMemberAttribute]
-        [JsonProperty("_resolution")]
+        [DataMember(Name = "_resolution", EmitDefaultValue = true)]
         public string Resolution { get; set; }
 
-        [DataMemberAttribute]
-        [JsonProperty("_app_version")]
+        [DataMember(Name = "_app_version", EmitDefaultValue = true)]
         public string AppVersion { get; set; }
 
-        [JsonProperty("_locale")]
-        [DataMemberAttribute]
+        [DataMember(Name = "_locale", EmitDefaultValue = true)]
         public string Locale { get; set; }
 
         //state of device
 
-        [DataMemberAttribute]
-        [JsonProperty("_orientation")]
+        [DataMember(Name = "_orientation", EmitDefaultValue = true)]
         public string Orientation { get; set; }
-
-        //bools
-
-        [DataMemberAttribute]
-        [JsonProperty("_online")]
-        public bool Online { get; set; }
 
         //error info
 
-        [DataMemberAttribute]
-        [JsonProperty("_name")]
+        [DataMember(Name = "_name", EmitDefaultValue = true)]
         public string Name { get; set; }
 
-        [DataMemberAttribute]
-        [JsonProperty("_error")]
+        [DataMember(Name = "_error", EmitDefaultValue = true)]
         public string Error { get; set; }
 
-        [DataMemberAttribute]
-        [JsonProperty("_nonfatal")]
+        [DataMember(Name = "_nonfatal", EmitDefaultValue = true)]
         public bool NonFatal { get; set; }
 
-        [DataMemberAttribute]
-        [JsonProperty("_logs")]
+        [DataMember(Name = "_logs", EmitDefaultValue = true)]
         public string Logs { get; set; }
 
-        [DataMemberAttribute]
-        [JsonProperty("_run")]
-        public long Run { get; set; }
+        [DataMember(Name = "_run", EmitDefaultValue = true)]
+        public int Run { get; set; }
 
         //custom key/values provided by developers
 
-        [JsonProperty("_custom")]
+        [DataMember(Name = "_custom", EmitDefaultValue = true)]
         public Dictionary<string, string> Custom { get; set; }
-
-        /// <summary>
-        /// Custom data ready for datacontract serializer
-        /// </summary>
-        //[JsonIgnore]
-        //[DataMemberAttribute]
-        //internal List<KeyValuePair<string, string>> _custom
-        //{
-        //    get
-        //    {
-        //        if (Custom == null) return null;
-
-        //        List<KeyValuePair<string, string>> list = new List<KeyValuePair<string, string>>();
-
-        //        foreach (var pair in Custom)
-        //        {
-        //            list.Add(new KeyValuePair<string, string>(pair.Key, pair.Value));
-        //        }
-
-        //        return list;
-        //    }
-        //    set
-        //    {
-        //        if (value == null)
-        //        {
-        //            Custom = new Dictionary<string, string>();
-        //        }
-        //        else
-        //        {
-        //            Dictionary<string, string> dictionary = new Dictionary<string, string>();
-
-        //            foreach (var pair in value)
-        //            {
-        //                dictionary.Add(pair.Key, pair.Value);
-        //            }
-
-        //            Custom = dictionary;
-        //        }
-        //    }
-        //}
 
         public ExceptionEvent()
         { }
 
-        public ExceptionEvent(string Error, string StackTrace, bool fatal, string breadcrumb, TimeSpan run, Dictionary<string, string> customInfo)
+        public ExceptionEvent(string Error, string StackTrace, bool fatal, StringBuilder breadCrumb, DateTime startTime, Dictionary<string, string> customInfo)
         {
             //device metrics
             OS = CountlySDK.Entities.Device.OS;
@@ -162,15 +100,12 @@ namespace CountlySDK.Entities
             //state of device
             Orientation = CountlySDK.Entities.Device.Orientation;
 
-            //bools
-            Online = CountlySDK.Entities.Device.Online;
-
             //error info
             this.Name = Error;
             this.Error = StackTrace;
             NonFatal = !fatal;
-            Logs = breadcrumb;
-            Run = (long)run.TotalSeconds;
+            Logs = breadCrumb.ToString();
+            Run = (int)DateTime.UtcNow.Subtract(startTime).TotalSeconds;
             Custom = customInfo;
         }
     }
