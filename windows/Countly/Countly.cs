@@ -100,14 +100,16 @@ namespace CountlySDK
         /// </summary>
         public static bool IsExceptionsLoggingEnabled { get; set; }
 
-        internal static TimeSpan GetSessionDuration()
+        internal static int GetSessionDuration()
         {
             lock(sync)
             {
                 var now = DateTime.UtcNow;
                 var time = now - lastTime;
                 lastTime = now;
-                return time;
+
+                //HACK: Count.ly only allows a max of 120, so as a fallback send 120
+                return Math.Min((int)time.TotalSeconds, 120);
             }
         }
 
@@ -171,7 +173,7 @@ namespace CountlySDK
                 Timer = null;
             }
             
-            await Upload(CountlyRequest.CreateUpdateSession(), CountlyRequest.CreateEndSession());
+            await Upload(CountlyRequest.CreateEndSession());
         }
 
         /// <summary>
@@ -289,30 +291,30 @@ namespace CountlySDK
             return Upload(CountlyRequest.CreateUpdateSession());
         } 
 
-        private static async Task<bool> Upload(params CountlyRequest[] requests)
+        private static async Task<bool> Upload(CountlyRequest request)
         {
             if (string.IsNullOrWhiteSpace(ServerUrl))
             {
                 throw new InvalidOperationException("session is not active");
             }
 
-            var list = new List<CountlyRequest>();
+            var requests = new List<CountlyRequest>();
 
             lock(sync)
             {
                 if (UserDetails.HasChanges)
                 {
-                    requests[0].UserDetails = UserDetails;
+                    request.UserDetails = UserDetails;
                     UserDetails.HasChanges = false;
                 }
 
-                list.AddRange(Events);
+                requests.AddRange(Events);
                 Events.Clear();
             }
 
-            list.AddRange(requests);
+            requests.Add(request);
 
-            var response = await Api.Call<ResultResponse>(ServerUrl, list);
+            var response = await Api.Call<ResultResponse>(ServerUrl, requests);
             return response.IsSuccess;
         }
 

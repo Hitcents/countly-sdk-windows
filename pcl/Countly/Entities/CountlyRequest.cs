@@ -21,8 +21,7 @@ namespace CountlySDK.Entities
         {
             return new CountlyRequest
             {
-                //HACK: Count.ly only allows a max of 120, so as a fallback send 120
-                Duration = Math.Min((int)Countly.GetSessionDuration().TotalSeconds, 120),
+                Duration = Countly.GetSessionDuration(),
             };
         }
 
@@ -31,6 +30,7 @@ namespace CountlySDK.Entities
             return new CountlyRequest
             {
                 EndSession = "1",
+                Duration = Countly.GetSessionDuration(),
             };
         }
 
