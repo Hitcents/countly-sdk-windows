@@ -142,5 +142,26 @@ namespace CountlyTests
 
             await Countly.EndSession();
         }
+
+        [Test]
+        public async Task LongTestForSessions()
+        {
+            var random = new Random();
+
+            Countly.UserDetails.Name = UserName;
+            await Countly.StartSession(Server, ApiKey);
+
+            for (int i = 0; i < 200; i++)
+            {
+                if (random.Next(2) == 0)
+                    Countly.RecordEvent("Action" + i, segmentation: MakeSegment());
+                else
+                    Countly.RecordView("Screen" + i, MakeSegment());
+
+                await Task.Delay(1000);
+            }
+
+            await Countly.EndSession();
+        }
     }
 }

@@ -70,6 +70,9 @@ namespace CountlySDK
 
         // Start session timestamp
         private static DateTime startTime;
+        // Update session timestamp
+        private static DateTime lastTime;
+
         // Update session timer
         private static Timer Timer;
 
@@ -97,6 +100,17 @@ namespace CountlySDK
         /// </summary>
         public static bool IsExceptionsLoggingEnabled { get; set; }
 
+        internal static TimeSpan GetSessionDuration()
+        {
+            lock(sync)
+            {
+                var now = DateTime.UtcNow;
+                var time = now - lastTime;
+                lastTime = now;
+                return time;
+            }
+        }
+
         /// <summary>
         /// Starts Countly tracking session.
         /// Call from your App.xaml.cs Application_Launching and Application_Activated events.
@@ -121,7 +135,8 @@ namespace CountlySDK
 
             Events.Clear();
              
-            startTime = DateTime.UtcNow;
+            startTime = 
+                lastTime = DateTime.UtcNow;
 
             var interval = TimeSpan.FromSeconds(updateInterval);
             Timer = new Timer(UpdateSession, null, interval, interval);
@@ -156,7 +171,7 @@ namespace CountlySDK
                 Timer = null;
             }
             
-            await Upload(CountlyRequest.CreateUpdateSession(startTime), CountlyRequest.CreateEndSession());
+            await Upload(CountlyRequest.CreateUpdateSession(), CountlyRequest.CreateEndSession());
         }
 
         /// <summary>
@@ -271,7 +286,7 @@ namespace CountlySDK
         /// <returns>True if success</returns>
         public static Task<bool> Upload()
         {
-            return Upload(CountlyRequest.CreateUpdateSession(startTime));
+            return Upload(CountlyRequest.CreateUpdateSession());
         } 
 
         private static async Task<bool> Upload(params CountlyRequest[] requests)

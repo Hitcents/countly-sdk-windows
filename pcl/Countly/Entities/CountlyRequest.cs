@@ -17,11 +17,12 @@ namespace CountlySDK.Entities
             };
         }
 
-        public static CountlyRequest CreateUpdateSession(DateTime startTime)
+        public static CountlyRequest CreateUpdateSession()
         {
             return new CountlyRequest
             {
-                Duration = (int)DateTime.UtcNow.Subtract(startTime).TotalSeconds,
+                //HACK: Count.ly only allows a max of 120, so as a fallback send 120
+                Duration = Math.Min((int)Countly.GetSessionDuration().TotalSeconds, 120),
             };
         }
 
