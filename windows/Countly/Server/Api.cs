@@ -17,7 +17,7 @@ namespace CountlySDK
 
         private static readonly HttpClient _httpClient = new HttpClient();
 
-        public static async Task<T> Call<T>(string serverUrl, IEnumerable<CountlyRequest> request)
+        public static async Task<T> Call<T>(string serverUrl, IEnumerable<CountlyRequest> request) where T : new()
         {
             try
             {
@@ -50,7 +50,7 @@ namespace CountlySDK
                 Countly.Log(exc);
             }
 
-            return default(T);
+            return new T();
         }
     }
 }
