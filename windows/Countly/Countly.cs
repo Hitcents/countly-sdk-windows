@@ -147,7 +147,7 @@ namespace CountlySDK
             if (view != null)
             {
                 view.Time = DateTime.UtcNow;
-                AddEvent(new CountlyEvent(ViewEvent, 1, 0, null, view.Segmentation));
+                AddEvent(new CountlyEvent(ViewEvent, 1, null, null, view.Segmentation));
             }
 
             await Upload(CountlyRequest.CreateBeginSession());
@@ -231,11 +231,11 @@ namespace CountlySDK
             {
                 segmentation.Add("start", "1");
 
-                evt = new CountlyEvent(ViewEvent, 1, 0, null, segmentation);
+                evt = new CountlyEvent(ViewEvent, 1, null, null, segmentation);
             }
             else
             {
-                evt = new CountlyEvent(ViewEvent, 1, 0, Math.Round((DateTime.UtcNow - view.Time).TotalSeconds, 2), segmentation);
+                evt = new CountlyEvent(ViewEvent, 1, null, Math.Round((DateTime.UtcNow - view.Time).TotalSeconds, 2), segmentation);
             }
             lastView = new View { Name = name, Time = DateTime.UtcNow, Segmentation = segmentation };
             AddEvent(evt);

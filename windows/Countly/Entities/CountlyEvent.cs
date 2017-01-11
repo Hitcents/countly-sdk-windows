@@ -20,67 +20,59 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CountlySDK.Entities
 {
     /// <summary>
     /// This class holds the data for a single Count.ly custom event instance.
     /// </summary>
-    [DataContractAttribute]
+    [DataContract]
     internal class CountlyEvent
     {
         /// <summary>
         /// Key attribute, must be non-empty
         /// </summary>
-        [DataMemberAttribute]
-        [JsonProperty("key")]
+        [DataMember(Name = "key", EmitDefaultValue = true)]
         public string Key { get; set; }
 
         /// <summary>
         /// Count parameter, must me positive number
         /// </summary>
-        [DataMemberAttribute]
-        [JsonProperty("count")]
+        [DataMember(Name = "count", EmitDefaultValue = true)]
         public int Count { get; set; }
 
         /// <summary>
         /// Sum parameter, can be null
         /// </summary>
-        [DataMemberAttribute]
-        [JsonProperty("sum")]
+        [DataMember(Name = "sum", EmitDefaultValue = true)]
         public double? Sum { get; set; }
 
         /// <summary>
         /// Dur parameter, I have no idea guys
         /// </summary>
-        [DataMemberAttribute]
-        [JsonProperty("dur", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [DataMember(Name = "dur", EmitDefaultValue = true)]
         public double? Dur { get; set; }
 
         /// <summary>
         /// Segmentation parameter
         /// </summary>
-        [DataMemberAttribute]
-        [JsonIgnore]
+        [IgnoreDataMember]
         public Segmentation Segmentation { get; internal set; }
 
         /// <summary>
         /// Segmentation json-ready object
         /// </summary>
-        [JsonProperty("segmentation")]
-        private Dictionary<String, String> segmentation
+        [DataMember(Name = "segmentation", EmitDefaultValue = true)]
+        private Dictionary<string, string> segmentation
         {
             get
             {
-                if (Segmentation == null) return null;
+                if (Segmentation == null || Segmentation.segmentation.Count == 0)
+                    return null;
 
                 return Segmentation.segmentation.ToDictionary(s => s.Key, s => s.Value);
             }
