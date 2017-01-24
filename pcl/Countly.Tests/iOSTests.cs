@@ -163,5 +163,25 @@ namespace CountlyTests
 
             await Countly.EndSession();
         }
+
+        [Test]
+        public async Task ChangeMyTeamAndLevel()
+        {
+            Countly.UserDetails.Name = UserName;
+            await Countly.StartSession(Server, ApiKey);
+
+            Countly.RecordView("ScreenA", MakeSegment());
+            await Task.Delay(1000);
+            Countly.RecordView("ScreenB", MakeSegment());
+            await Task.Delay(1000);
+            Countly.RecordView("ScreenC", MakeSegment());
+            await Task.Delay(1000);
+            Countly.RecordView("ScreenD", MakeSegment());
+            Countly.RecordView("ScreenE", MakeSegment());
+
+            Countly.UserDetails.Custom["Level"] = "3";
+            Countly.UserDetails.Custom["Team"] = "Warriors";
+            await Countly.EndSession();
+        }
     }
 }
