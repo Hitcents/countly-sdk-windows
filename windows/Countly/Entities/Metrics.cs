@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-using Newtonsoft.Json;
 using System.Runtime.Serialization;
 
 namespace CountlySDK.Entities
@@ -28,68 +27,58 @@ namespace CountlySDK.Entities
     /// <summary>
     /// Holds device-specific info in json-ready format
     /// </summary>
-    [DataContractAttribute]
+    [DataContract]
     internal class Metrics
     {
         /// <summary>
         /// Name of the current operating system
         /// </summary>
-        [JsonProperty("_os")]
-        [DataMemberAttribute]
+        [DataMember(Name = "_os")]
         public string OS { get; set; }
 
         /// <summary>
         /// Current operating system version
         /// </summary>
-        //[JsonProperty("_os_version")]
-        [JsonIgnore]
-        [DataMemberAttribute]
+        [DataMember(Name = "_os_version")]
         public string OSVersion { get; set; }
 
         /// <summary>
         /// Current device model
         /// </summary>
-        [JsonProperty("_device")]
-        [DataMemberAttribute]
+        [DataMember(Name = "_device")]
         public string Device { get; set; }
 
         /// <summary>
         /// Device resolution
         /// </summary>
-        [JsonProperty("_resolution")]
-        [DataMemberAttribute]
+        [DataMember(Name = "_resolution")]
         public string Resolution { get; set; }
 
-        [JsonProperty("_locale")]
-        [DataMemberAttribute]
+        [DataMember(Name = "_locale")]
         public string Locale { get; set; }
 
         /// <summary>
         /// Cellular mobile operator
         /// </summary>
-        [JsonProperty("_carrier")]
-        [DataMemberAttribute]
+        [DataMember(Name = "_carrier")]
         public string Carrier { get; set; }
 
         /// <summary>
         /// The package name of the app that installed this app
         /// </summary>
-        [JsonProperty("_store")]
-        [DataMemberAttribute]
+        [DataMember(Name = "_store")]
         public string Store { get; set; }
 
         /// <summary>
         /// A string constant representing the current display density, or the empty string if the density is unknown
         /// </summary>
-        [JsonProperty("_density")]
-        [DataMemberAttribute]
+        [DataMember(Name = "_density")]
         public string Density { get; set; }
 
         /// <summary>
         /// Application version
         /// </summary>
-        [JsonProperty("_app_version")]
-        [DataMemberAttribute]
+        [DataMember(Name = "_app_version")]
         public string AppVersion { get; set; }
 
         /// <summary>
@@ -97,24 +86,15 @@ namespace CountlySDK.Entities
         /// </summary>
         public Metrics()
         {
-            this.OS = Entities.Device.OS;
-            this.OSVersion = Entities.Device.OSVersion;
-            this.Device = Entities.Device.DeviceName;
-            this.Resolution = Entities.Device.Resolution;
-            this.Carrier = Entities.Device.Carrier;
-            this.AppVersion = Entities.Device.AppVersion;
-            this.Locale = Entities.Device.Locale;
-            this.Store = Entities.Device.Store;
-            this.Density = Entities.Device.Density;
-        }
-
-        /// <summary>
-        /// Serializes object into json
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this, Api.JsonSettings);
+            OS = Entities.Device.OS;
+            OSVersion = Entities.Device.OSVersion;
+            Device = Entities.Device.DeviceName;
+            Resolution = Entities.Device.Resolution;
+            Carrier = Entities.Device.Carrier;
+            AppVersion = Entities.Device.AppVersion;
+            Locale = Entities.Device.Locale;
+            Store = Entities.Device.Store;
+            Density = Entities.Device.Density;
         }
     }
 }
