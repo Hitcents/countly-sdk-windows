@@ -61,7 +61,7 @@ namespace CountlySDK
         private static object sync = new object();
 
         // Events queue
-        private static List<CountlyRequest> Events { get; set; } = new List<CountlyRequest>();
+        private static readonly List<CountlyRequest> Events = new List<CountlyRequest>();
 
         // User details info
         public static CountlyUserDetails UserDetails { get; set; } = new CountlyUserDetails();
@@ -314,8 +314,29 @@ namespace CountlySDK
 
             requests.Add(request);
 
-            var response = await Api.Call<ResultResponse>(ServerUrl, requests);
-            return response.IsSuccess;
+            try
+            {
+                var response = await Api.Call<ResultResponse>(ServerUrl, requests);
+                if (!response.IsSuccess)
+                    OnFailed(requests);
+                return response.IsSuccess;
+            }
+            catch
+            {
+                OnFailed(requests);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// NOTE: if Upload() fails, we re-queue the events to try again later
+        /// </summary>
+        private static void OnFailed(List<CountlyRequest> requests)
+        {
+            lock (sync)
+            {
+                Events.InsertRange(0, requests);
+            }
         }
 
         internal static void Log(string message)
