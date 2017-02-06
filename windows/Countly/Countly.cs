@@ -47,7 +47,7 @@ namespace CountlySDK
         public const string SdkVersion = "1.0";
 
         // How often update session is sent
-        private const int updateInterval = 60;
+        private const int updateInterval = 30;
 
         // Server url provided by a user
         internal static string ServerUrl;
