@@ -14,6 +14,7 @@ namespace CountlySDK.Entities
                 SdkVersion = Countly.SdkVersion,
                 BeginSession = "1",
                 Metrics = new Metrics(),
+                TimeStamp = TimeHelper.ToUnixTime(),
             };
         }
 
@@ -22,6 +23,7 @@ namespace CountlySDK.Entities
             return new CountlyRequest
             {
                 Duration = Countly.GetSessionDuration(),
+                TimeStamp = TimeHelper.ToUnixTime(),
             };
         }
 
@@ -31,6 +33,7 @@ namespace CountlySDK.Entities
             {
                 EndSession = "1",
                 Duration = Countly.GetSessionDuration(),
+                TimeStamp = TimeHelper.ToUnixTime(),
             };
         }
 
